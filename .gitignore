@@ -1,0 +1,8 @@
+**/*.bin
+**/*.model
+**/*.pt
+saved_models/**/*
+data/**/*
+wandb/**/*
+**/__pycache__
+.*/
