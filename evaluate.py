@@ -60,7 +60,6 @@ for gt_col, pred_col in zip(args.ground_truth_column,
             # Otherwise, count it as a false negative
             else:
                 entity_fn[col] += 1
-                print(entity)
         
         # Iterate through each predicted entity in the current row
         for entity in pred_list:
@@ -133,8 +132,7 @@ entity_matrix = pd.DataFrame({'Precision': entity_precision, 'Recall': entity_re
 token_matrix = pd.DataFrame({'Precision': token_precision, 'Recall': token_recall, 'F1 Score': token_f1})
 
 # Print the matrices
-print('\nEntity-Level Evaluation:\n')
+print('\nEntity-Level Evaluation:')
 print(entity_matrix)
-print()
-print('\nToken-Level Evaluation:\n')
+print('\nToken-Level Evaluation:')
 print(token_matrix)
