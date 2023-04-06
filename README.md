@@ -7,7 +7,87 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 **Dev Repo**
 
 # The Name Extraction Framework for Combating Human Trafficking
-## Author: Javin, Peter, Vidya
+## Author: 
+- Javin: GPT-based name expansion and GPT based data-label generations
+- Vidya: Aggregation
+- Peter: ChatGPT/GPT4 based pseudo labels to finetune BERT
+    - ChatGPT/GPT gerenating pseudo labels:
+        PreCondition: ```export OPENAI_API_KEY='yourkey'```
+        Usage: 
+        ```
+        openai_gpt.py [-h] [--data DATA] [--save_path SAVE_PATH]
+                      [--model {gpt4,gpt3.5,davinci,D,Curie,C,Babbage,B,Ada,A}] [--prompt PROMPT]
+                      [--result_column RESULT_COLUMN] [--verbose]
+        ```
+        ```
+        optional arguments:
+            -h, --help            show this help message and exit
+            --data DATA           dataset-name | csv_file[have 'text' coloum]
+            --save_path SAVE_PATH
+            --model {gpt4,gpt3.5,davinci,D,Curie,C,Babbage,B,Ada,A}
+            --prompt PROMPT       default: see code
+            --result_column_name RESULT_COLUMN_NAME
+            --verbose
+        ```
+
+    - Fientune DeBERTav3:
+        Usage:
+        ```
+        python3 src/finetune.py 
+            --data dataset-name | csv_file[have 'text' coloum]
+            --label_column gpt_name gpt_location gpt_social_media
+            --save_dir ./models
+        ```
+
+    - Inference with Finetuned Model:
+        Usage:
+        ```
+        python3 src/inference.py 
+            --data dataset-name | csv_file[have 'text' coloum]
+            --label_column gpt_name gpt_location gpt_social_media
+            --save_path ./prediction/HT1K_finetune.csv
+        ```
+
+    - Evaluate F1:
+        ```
+        usage: evaluate.py [-h] [--ground_truth GROUND_TRUTH]
+                        [--ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]]
+                        [--pred PRED]
+                        [--prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]]
+
+        Evaluate F1 score for each column in entity and token
+        levels.
+
+        optional arguments:
+        -h, --help            show this help message and exit
+        --ground_truth GROUND_TRUTH
+                                Name and location of ground truth
+                                CSV file.
+        --ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]
+                                Names of columns in ground truth
+                                CSV file that contain the
+                                entities.
+        --pred PRED           Location of prediction CSV file.
+        --prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]
+                                Names of columns in prediction CSV
+                                file that contain the entities.
+        ```
+        <!-- python3 src/evalute.py \
+            --ground_truth dataset-name | csv_file
+            --ground_truth_column gpt_name gpt_location gpt_social_media
+            --pred './prediction/HT1K_finetune.csv'
+            --predition_column name location social_media -->
+
+    -- Full Experiemnt
+        Usage:
+        # Baseline Evaluation:
+        ```
+        python3 evaluate.py --ground_truth ./results/ht1k_chatgpt.csv --ground_truth_column label --pred ./results/ht1k_chatgpt.csv --prediction_column gpt_name
+
+        python3 openai_gpt.py --data ./data/locanto_7k_with_entities.csv --save_path ./data/locanto_7k_with_entities_chatgpt.csv --result_column chatgpt_response --model gpt3.5
+
+        python3 openai_gpt.py --data ./data/unified_locanto.csv --save_path ./data/unified_locanto_chatgpt.csv --result_column chatgpt_response --model gpt3.5
+        ```
 
 ```
 ./data
