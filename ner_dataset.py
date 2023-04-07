@@ -6,19 +6,23 @@ from os.path import join as pj
 # datasets = load_dataset("conll2003")
 # datasets = load_dataset("tner/wnut2017")
 
-def load_street_name(root='/home/mila/h/hao.yu/ht/HTResearch/data/oda'):
+
+def load_street_name(root="/home/mila/h/hao.yu/ht/HTResearch/data/oda"):
     import json
     from glob import glob
-    
+
     all_data = {}
-    state_short = ['AB','BC','MB','NB','NS','NT','ON','PE','QC','SK']
+    state_short = ["AB", "BC", "MB", "NB", "NS", "NT", "ON", "PE", "QC", "SK"]
     for state in state_short:
-        with open(pj(root, f"{state}_processed_streets.json"), 'r',encoding='utf-16') as f:
+        with open(
+            pj(root, f"{state}_processed_streets.json"), "r", encoding="utf-16"
+        ) as f:
             content = json.load(f)
             all_data.update(content)
-    print('Finish Loading Street Names from CA Open Source.')        
+    print("Finish Loading Street Names from CA Open Source.")
     return all_data
-    
+
+
 def _loadWrapper(ds_name, root, kargs):
     if ds_name in ["conll2003", "conll-2003"]:
         return conll2003()
@@ -96,37 +100,43 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
         ds = ds.map(f, batched=True)
         label_col_name = "newtags"
         label_list = new_label_list
-        
+
     if substitude:
-        street_data = load_street_name() # {'city': list [street name]}
+        street_data = load_street_name()  # {'city': list [street name]}
         # street_data_classified_by_length = {i:[street for city in street_data.values() for street in city if (street)==i] for i in range(1, 10)}
-        street_list = [street for city in street_data.values() for street in city] + list(street_data.keys()) * 10
+        street_list = [
+            street for city in street_data.values() for street in city
+        ] + list(street_data.keys()) * 10
         street_list = list(set(street_list))
         street_list.sort()
-        loc_tag = [l for l in label_list if 'loc' in l.lower()]
-        
+        loc_tag = [l for l in label_list if "loc" in l.lower()]
+
         # import matplotlib.pyplot as plt
         # plt.hist(list(map(len, street_list)), bins=20)
         # plt.show()
         # plt.savefig('tmp.png')
         # print(len(street_list))
-        
+
         import random
+
         random.seed(2022)
         random.shuffle(street_list)
         from nltk.tokenize import RegexpTokenizer
+
         tokenizer = RegexpTokenizer(r"[/|(|)|{|}|$|?|!]|\w+|\$[\d\.]+|\S+")
+
         def f(examples):
             new_label = []
             new_token = []
             from itertools import groupby
-            for t, l in zip(examples['tokens'], examples[label_col_name]):
+
+            for t, l in zip(examples["tokens"], examples[label_col_name]):
                 l = [label_list[x] for x in l] if type(l[0]) == int else l
-                
-                groups = [[[],[]]]
+
+                groups = [[[], []]]
                 for i, (tt, ll) in enumerate(zip(t, l)):
-                    if (ll in loc_tag) != (l[i-1] in loc_tag):
-                        groups.append([[],[]])
+                    if (ll in loc_tag) != (l[i - 1] in loc_tag):
+                        groups.append([[], []])
                     groups[-1][0].append(tt)
                     groups[-1][1].append(ll)
 
@@ -134,12 +144,13 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
                 new_label.append([])
                 # print(groups)
                 for tt, ll in groups:
-                    if not (tt or ll): continue
+                    if not (tt or ll):
+                        continue
                     if ll[0] in loc_tag:
                         new_string = random.choice(street_list)
                         tt = tokenizer.tokenize(new_string)
                         if len(ll) == 1 and len(tt) > 1:
-                            ll += [ll[0].replace('B-','I-')] * (len(tt) - 1)
+                            ll += [ll[0].replace("B-", "I-")] * (len(tt) - 1)
                         else:
                             ll = [ll[0]] + [ll[-1]] * (len(tt) - 1)
                         new_token[-1].extend(tt)
@@ -147,14 +158,14 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
                     else:
                         new_token[-1].extend(tt)
                         new_label[-1].extend(ll)
-                        
+
             examples["newtags"] = new_label
             examples["tokens"] = new_token
             return examples
 
         ds = ds.map(f, batched=True)
         label_col_name = "newtags"
-        
+
     if fold != -1:
         assert fold >= 5 or fold < -1
         from sklearn.model_selection import StratifiedKFold
@@ -556,18 +567,21 @@ def wikiner(root, language="en"):
 
 def ht(root, kargs):
     import pandas as pd
-    street_only = kargs.get('street', False)
-    full_df = help_load(pd.read_csv(pj(root, "ht_tokenized_street.csv" 
-                                       if street_only
-                                       else "ht_tokenized.csv")))
-    
+
+    street_only = kargs.get("street", False)
+    full_df = help_load(
+        pd.read_csv(
+            pj(root, "ht_tokenized_street.csv" if street_only else "ht_tokenized.csv")
+        )
+    )
+
     # contain_label = []
     # for i,t in full_df.iterrows():
     #     if 'B-LOC' in t["tags"]:
     #        contain_label.append(i)
-           
-    # full_df = full_df.iloc[contain_label] 
-    
+
+    # full_df = full_df.iloc[contain_label]
+
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
     datasets["train"] = tds
@@ -624,7 +638,6 @@ def help_load(df, f=None):
 
 
 if __name__ == "__main__":
-    pass
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint

@@ -11,7 +11,10 @@ def request(prompt, content, model="gpt-3.5-turbo"):
             temperature=0.0,
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": content[:sum(len(x) for x in content.split()[:2500])]},
+                {
+                    "role": "user",
+                    "content": content[: sum(len(x) for x in content.split()[:2500])],
+                },
             ],
             max_tokens=50,
         )
@@ -33,7 +36,7 @@ if __name__ == "__main__":
     import pandas as pd
     from tqdm import tqdm
     import pickle, json, time
-    
+
     ht_prompt = "I want you to act as a natural and no-bias labler, extract human's name and location or address and social media link or tag in format 'Names: \nLocations: \nSocial: '. If exists multiple entities, spereated by |. If not exists, say N. Your words should extract from the given text, can't add/modify any other words. As shorter as poosible, remember don't include phone number. For one name, should be less than 3 words."
 
     parser = argparse.ArgumentParser()
@@ -74,15 +77,17 @@ if __name__ == "__main__":
         "A": "ada-001",
     }
     args.model = mapping[args.model]
-    
+
     try:
         df = pd.read_csv(args.data)
     except Exception as e:
         print(e)
-        df = pd.read_csv(args.data, encoding = "ISO-8859-1")
-        
+        df = pd.read_csv(args.data, encoding="ISO-8859-1")
+
     # resume
-    local_storage = f"./tmp_{args.model}_{os.path.basename(args.data).split('.')[0]}.pkl"
+    local_storage = (
+        f"./tmp_{args.model}_{os.path.basename(args.data).split('.')[0]}.pkl"
+    )
     if os.path.exists(local_storage):
         with open(local_storage, "rb") as f:
             responses = pickle.load(f)
@@ -90,10 +95,10 @@ if __name__ == "__main__":
         print(responses[-10:])
     else:
         responses = []
-        
-    if 'text' not in df.columns:
-        df['text'] = df.apply(lambda x: x['title']  + ' ' + x['description'], axis=1)
-        
+
+    if "text" not in df.columns:
+        df["text"] = df.apply(lambda x: x["title"] + " " + x["description"], axis=1)
+
     for i, text in enumerate(tqdm(df["text"].tolist())):
         if i < len(responses):
             continue
@@ -107,6 +112,6 @@ if __name__ == "__main__":
         with open(local_storage, "wb") as f:
             pickle.dump(responses, f)
         # time.sleep(0.5)
-        
+
     df[args.result_column_name] = responses
     df.to_csv(args.save_path, index=False)

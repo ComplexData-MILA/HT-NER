@@ -46,6 +46,7 @@ for gt_col, pred_col in zip(args.ground_truth_column, args.prediction_column):
         .fillna("")
         .apply(lambda x: x.lower())
         .str.split("|")
+        .apply(lambda x: list(y.strip() for y in x))
         .tolist()
     )
     predicted_entities = (
@@ -53,6 +54,7 @@ for gt_col, pred_col in zip(args.ground_truth_column, args.prediction_column):
         .fillna("")
         .apply(lambda x: x.lower())
         .str.split("|")
+        .apply(lambda x: list(y.strip() for y in x))
         .tolist()
     )
 
@@ -159,14 +161,6 @@ for token in token_tp.keys():
         * token_recall[token]
         / (token_precision[token] + token_recall[token])
     )
-
-# # Print the results
-# print('Entity-level F1 scores:')
-# for entity in entity_f1.keys():
-#     print(f'{entity}: {entity_f1[entity]:.2f}')
-# print('\nToken-level F1 scores:')
-# for token in token_f1.keys():
-#     print(f'{token}: {token_f1[token]:.2f}')
 
 # Create matrices to display the precision, recall, and F1 score for each entity and token
 entity_matrix = pd.DataFrame(
