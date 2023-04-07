@@ -74,8 +74,13 @@ if __name__ == "__main__":
         "A": "ada-001",
     }
     args.model = mapping[args.model]
-    df = pd.read_csv(args.data)
     
+    try:
+        df = pd.read_csv(args.data)
+    except Exception as e:
+        print(e)
+        df = pd.read_csv(args.data, encoding = "ISO-8859-1")
+        
     # resume
     local_storage = f"./tmp_{args.model}_{os.path.basename(args.data).split('.')[0]}.pkl"
     if os.path.exists(local_storage):

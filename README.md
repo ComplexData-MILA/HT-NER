@@ -80,11 +80,51 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - Full Experiemnt
         ```
-        python3 evaluate.py --ground_truth ./results/ht1k_chatgpt.csv --ground_truth_column label --pred ./results/ht1k_chatgpt.csv --prediction_column gpt_name
+        # ChatGPT on locanto7k
 
-        python3 openai_gpt.py --data ./data/locanto_7k_with_entities.csv --save_path ./data/locanto_7k_with_entities_chatgpt.csv --result_column chatgpt_response --model gpt3.5
+        python3 openai_gpt.py \
+            --data ./data/locanto_7k.csv \
+            --save_path ./data/locanto_7k_chatgpt.csv \
+            --result_column chatgpt_response \
+            --model gpt3.5
+        
+        # ChatGPT on locanto7k
 
-        python3 openai_gpt.py --data ./data/unified_locanto.csv --save_path ./data/unified_locanto_chatgpt.csv --result_column chatgpt_response --model gpt3.5
+        python3 openai_gpt.py \
+            --data ./data/unified_locanto.csv \
+            --save_path ./data/unified_locanto_chatgpt.csv \
+            --result_column chatgpt_response \
+            --model gpt3.5
+
+        python3 process_response.py \
+            --data ./results/ht1k_combine_chatgpt.csv \
+            --save_path ./results/ht1k_combine_chatgpt.csv
+
+        python3 evaluate.py \
+            --ground_truth ./results/ht1k_combine_chatgpt.csv  \
+            --ground_truth_column label \
+            --prediction ./results/ht1k_combine_chatgpt.csv \
+            --prediction_column gpt_name
+
+
+        # ChatGPT on HT1K
+
+        python3 openai_gpt.py \
+            --data ./data/ht1k_combine.csv \
+            --save_path ./data/ht1k_combine_chatgpt.csv \
+            --result_column chatgpt_response \
+            --model gpt3.5
+
+        python3 process_response.py \
+            --data ./results/ht1k_combine_chatgpt.csv \
+            --save_path ./results/ht1k_combine_chatgpt.csv
+
+        python3 evaluate.py \
+            --ground_truth ./results/ht1k_combine_chatgpt.csv  \
+            --ground_truth_column label \
+            --prediction ./results/ht1k_combine_chatgpt.csv \
+            --prediction_column gpt_name
+
         ```
 
 File Structure:
