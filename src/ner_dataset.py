@@ -47,9 +47,9 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["HTName", "HTname", "htname"]:
         assert root, "HT dataset need root path"
         return ht_name(root, kargs)
-    elif ds_name in ["HTLocation", "HTlocation", "htlocation"]:
+    elif ds_name in ["HTUnified", "HTunified", "htunified"]:
         assert root, "HT dataset need root path"
-        return ht_location(root, kargs)
+        return ht_unified(root, kargs)
     elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
         assert root, "HT dataset need root path"
         return ht_unsup(root, kargs)
@@ -75,14 +75,14 @@ def loadDataset(
         "wikiner-en",
         "wikineren",
         "HTName",
-        "HTLocation",
+        "HTUnified",
         "HTUnsup",
         "htname",
-        "htlocation",
+        "htunified",
         "htunsup",
         "HTname",
         "HTlocation",
-        "HTunsup",
+        "HTunified",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
     # postLoadDataset(ds, label_list, label_col_name)
@@ -595,13 +595,13 @@ def ht_name(root, kargs):
 
     full_df = help_load(pd.read_csv(pj(root, "HTName_tokenized.csv")))
 
-    if kargs.get("filter_empty_label", False):
-        contain_label = []
-        for i, t in full_df.iterrows():
-            if "B-LOC" in t["tags"]:
-                contain_label.append(i)
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     for i, t in full_df.iterrows():
+    #         if "B-LOC" in t["tags"]:
+    #             contain_label.append(i)
 
-        full_df = full_df.iloc[contain_label]
+    #     full_df = full_df.iloc[contain_label]
 
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
@@ -611,33 +611,23 @@ def ht_name(root, kargs):
     return datasets, label_list, "tags"
 
 
-def ht_location(root, kargs):
+def ht_unified(root, kargs):
     import pandas as pd
 
-    street_only = kargs.get("street", False)
-    full_df = help_load(
-        pd.read_csv(
-            pj(
-                root,
-                "HTLocation_tokenized_street.csv"
-                if street_only
-                else "HTLocation_tokenized.csv",
-            )
-        )
-    )
+    full_df = help_load(pd.read_csv(pj(root, "HTUnified_tokenized.csv")))
 
-    if kargs.get("filter_empty_label", False):
-        contain_label = []
-        for i, t in full_df.iterrows():
-            if "B-LOC" in t["tags"]:
-                contain_label.append(i)
-        full_df = full_df.iloc[contain_label]
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     for i, t in full_df.iterrows():
+    #         if "B-LOC" in t["tags"]:
+    #             contain_label.append(i)
+    #     full_df = full_df.iloc[contain_label]
 
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
     datasets["train"] = tds
     datasets["validation"] = vds
-    label_list = ["O", "B-LOC", "I-LOC"]
+    label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
     return datasets, label_list, "tags"
 
 
@@ -646,13 +636,13 @@ def ht_unsup(root, kargs):
 
     full_df = help_load(pd.read_csv(pj(root, "HTUnsup_tokenized.csv")))
 
-    if kargs.get("filter_empty_label", False):
-        contain_label = []
-        ls = set(["B-LOC", "B-NAME"])
-        for i, t in full_df.iterrows():
-            if ls.intersection(t["tags"]):
-                contain_label.append(i)
-        full_df = full_df.iloc[contain_label]
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     ls = set(["B-LOC", "B-NAME"])
+    #     for i, t in full_df.iterrows():
+    #         if ls.intersection(t["tags"]):
+    #             contain_label.append(i)
+    #     full_df = full_df.iloc[contain_label]
 
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()

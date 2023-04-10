@@ -10,6 +10,8 @@ from ark_nlp.nn.layer.global_pointer_block import GlobalPointer, EfficientGlobal
 
 
 from torch.nn.modules.loss import CrossEntropyLoss
+
+
 def crossentropy_loss(logits, labels, attention_mask, num_labels):
     loss = None
     if labels is not None:
@@ -54,7 +56,7 @@ class DebertaV2TokenClassification(DebertaV2BaseModel):
                 dropout=0.2,
                 bidirectional=True,
             )
-            self.classifier = nn.Linear(config.hidden_size*2, config.num_labels)
+            self.classifier = nn.Linear(config.hidden_size * 2, config.num_labels)
         else:
             self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
@@ -80,7 +82,7 @@ class DebertaV2TokenClassification(DebertaV2BaseModel):
         outputs = self.dropout(outputs)
         logits = self.classifier(outputs)
         return self.model_output(logits, labels, attention_mask)
-    
+
     def model_output(self, logits, targets, mask):
         # loss = 0
         # if targets is not None:
@@ -88,14 +90,13 @@ class DebertaV2TokenClassification(DebertaV2BaseModel):
         #     # f1 = self.monitor_metrics(logits, targets, attention_mask=mask)
         #     return loss, logits
         # return logits
-        
+
         loss = None
         if targets is not None:
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), targets.view(-1))
 
         return TokenClassifierOutput(loss=loss, logits=logits)
-    
 
     def monitor_metrics(self, outputs, targets, attention_mask):
         active_loss = (attention_mask.view(-1) == 1).cpu().numpy()
@@ -112,13 +113,15 @@ class DebertaV2GlobalPointer(DebertaV2TokenClassification):
         super(DebertaV2GlobalPointer, self).__init__(config)
         if efficient:
             self.global_pointer = EfficientGlobalPointer(
-                config.num_labels + 1, head_size=head_size, 
-                hidden_size=config.hidden_size*(2 if self.config.BiLSTM else 1)
+                config.num_labels + 1,
+                head_size=head_size,
+                hidden_size=config.hidden_size * (2 if self.config.BiLSTM else 1),
             )
         else:
             self.global_pointer = GlobalPointer(
-                config.num_labels + 1, head_size=head_size, 
-                hidden_size=config.hidden_size*(2 if self.config.BiLSTM else 1)
+                config.num_labels + 1,
+                head_size=head_size,
+                hidden_size=config.hidden_size * (2 if self.config.BiLSTM else 1),
             )
         del self.classifier
         del self.dropout
@@ -156,13 +159,18 @@ class DebertaV2GlobalPointer(DebertaV2TokenClassification):
             # print(logits, loss, f1)
             # return logits
             return TokenClassifierOutput(loss=loss, logits=logits)
-        
+
         if targets is not None:
-            return torch.tensor(0.0), self.decode(logits), \
-                np.argmax(self.decode(targets.to_dense().type(torch.DoubleTensor)), axis=2)
+            return (
+                torch.tensor(0.0),
+                self.decode(logits),
+                np.argmax(
+                    self.decode(targets.to_dense().type(torch.DoubleTensor)), axis=2
+                ),
+            )
         else:
             return torch.tensor(0.0), self.decode(logits), None
-        
+
     def decode(self, logits):
         logits = logits.cpu().numpy()
         logits[:, :, [0, -1]] -= np.inf
@@ -172,19 +180,21 @@ class DebertaV2GlobalPointer(DebertaV2TokenClassification):
         for i in range(logits.shape[0]):
             cur_logtis = logits[i]
             confidences = []
-            for category, start, end in zip(*np.where(cur_logtis > 0.)):
+            for category, start, end in zip(*np.where(cur_logtis > 0.0)):
                 confidences.append(
                     (cur_logtis[category, start, end], category, start, end)
                 )
             confidences = sorted(confidences, key=lambda x: x[0])
             output_ids = [1] * cur_logtis.shape[-1]
             for conf, cat, s, e in confidences:
-                output_ids[s:e+1] = [cat] * (e - s+1)
-            output_ids = torch.nn.functional.one_hot(torch.tensor(output_ids), self.num_labels + 1) # modified
+                output_ids[s : e + 1] = [cat] * (e - s + 1)
+            output_ids = torch.nn.functional.one_hot(
+                torch.tensor(output_ids), self.num_labels + 1
+            )  # modified
             batch_results.append(output_ids)
 
         return torch.stack(batch_results, dim=0)[:, :, 1:]
-    
+
     @staticmethod
     def monitor_metrics(outputs, targets, attention_mask=None):
         def global_pointer_f1_score(y_true, y_pred):
@@ -196,28 +206,35 @@ class DebertaV2GlobalPointer(DebertaV2TokenClassification):
         )
         return {"f1": 2 * numerate / denominator}
 
+
 from transformers import DataCollatorForTokenClassification
 
+
 class DebertaV2GlobalPointerDataCollator(DataCollatorForTokenClassification):
-    # label_pad_token_id: int = 0 
+    # label_pad_token_id: int = 0
     # return_tensors: str = "pt"
     # num_labels: int = 5
     # max_length = 300
     # padding = 'max_length'
-    
+
     def torch_call(self, features):
         # print(features)
         def tmpf(x):
-            x[0]=0
-            x[-1]=0
+            x[0] = 0
+            x[-1] = 0
             return x
+
         label_name = "label" if "label" in features[0].keys() else "labels"
-        labels = [tmpf(feature[label_name]) for feature in features] if label_name in features[0].keys() else None
+        labels = (
+            [tmpf(feature[label_name]) for feature in features]
+            if label_name in features[0].keys()
+            else None
+        )
         batch = self.tokenizer.pad(
             features,
-            padding=True, #'max_length', #self.padding,
-            max_length=self.max_length, # self.max_length,
-            pad_to_multiple_of=True, #self.pad_to_multiple_of,
+            padding=True,  #'max_length', #self.padding,
+            max_length=self.max_length,  # self.max_length,
+            pad_to_multiple_of=True,  # self.pad_to_multiple_of,
             return_tensors="pt" if labels is None else None,
         )
 
@@ -225,29 +242,39 @@ class DebertaV2GlobalPointerDataCollator(DataCollatorForTokenClassification):
             return batch
 
         sequence_length = torch.tensor(batch["input_ids"]).shape[1]
-        batch = {k: torch.tensor(v, dtype=torch.int64) for k, v in batch.items() if k != label_name}
-        batch[label_name] = torch.stack([self.padding_sparse(label, sequence_length) for label in labels])
-        batch['attention_mask'][:,0] = batch['attention_mask'][:,1]
+        batch = {
+            k: torch.tensor(v, dtype=torch.int64)
+            for k, v in batch.items()
+            if k != label_name
+        }
+        batch[label_name] = torch.stack(
+            [self.padding_sparse(label, sequence_length) for label in labels]
+        )
+        batch["attention_mask"][:, 0] = batch["attention_mask"][:, 1]
         return batch
-    
+
     def padding_sparse(self, label, batch_max=300):
         if label != []:
             # print(label) => [label, s, e]
-            groups = [[-2,-1,-1],]
+            groups = [
+                [-2, -1, -1],
+            ]
             for i, l in enumerate(label):
                 if l == groups[-1][0]:
                     groups[-1][2] = i
                 elif l != groups[-1][0]:
                     groups.append([l, i, i])
             groups.pop(0)
-            
+
             label = np.array(groups).T
             label[0] += 1
             label = torch.sparse_coo_tensor(
                 label, [1] * len(label[0]), (self.num_labels + 1, batch_max, batch_max)
             )
         else:
-            label = torch.sparse_coo_tensor(size=(self.num_labels + 1, batch_max, batch_max))
+            label = torch.sparse_coo_tensor(
+                size=(self.num_labels + 1, batch_max, batch_max)
+            )
         return label
 
 
@@ -255,12 +282,18 @@ class DebertaV2CRF(DebertaV2TokenClassification):
     def __init__(self, config):
         config.num_labels += 2
         super(DebertaV2CRF, self).__init__(config)
-        from allennlp.modules.conditional_random_field.conditional_random_field import ConditionalRandomField
-        self.crf = ConditionalRandomField(num_tags=self.num_labels, include_start_end_transitions=True)#, batch_first=True)
+        from allennlp.modules.conditional_random_field.conditional_random_field import (
+            ConditionalRandomField,
+        )
+
+        self.crf = ConditionalRandomField(
+            num_tags=self.num_labels, include_start_end_transitions=True
+        )  # , batch_first=True)
         self.init_weights()
         # <start>: self.num_labels, <end>: self.num_labels+1
+
     def model_output(self, logits, targets, mask):
-        loss = 0.
+        loss = 0.0
         if targets is not None and logits.requires_grad:
             # cross_loss = self.loss(logits, targets, attention_mask=mask)
             loss = -self.crf(
@@ -274,39 +307,50 @@ class DebertaV2CRF(DebertaV2TokenClassification):
         # logits = torch.nn.functional.one_hot(logits, self.num_labels)
         nbest_weight = [0.4, 0.35, 0.25]
         results = self.crf.viterbi_tags(
-            logits, mask=mask, top_k=3#len(nbest_weight)
+            logits, mask=mask, top_k=3  # len(nbest_weight)
         )  # (nbest, bc, seqlen)
         # print(logits)
         # bc, best, tag, score
-        padding = lambda x: x + [0]*(512-len(x))
+        padding = lambda x: x + [0] * (512 - len(x))
         # print([sample for sample in results[:2]])
-        final = torch.zeros((logits.shape[0], 512, self.num_labels-2,), dtype=torch.float32)
+        final = torch.zeros(
+            (
+                logits.shape[0],
+                512,
+                self.num_labels - 2,
+            ),
+            dtype=torch.float32,
+        )
         for i, thr in enumerate(nbest_weight):
             tmp = torch.tensor([padding(sample[i][0]) for sample in results])
-            tmp[tmp>=self.num_labels-2] = 0
-            final += torch.nn.functional.one_hot(tmp, self.num_labels-2) * thr
+            tmp[tmp >= self.num_labels - 2] = 0
+            final += torch.nn.functional.one_hot(tmp, self.num_labels - 2) * thr
         # print(final)
         # final = torch.zeros(logits.shape[1:] + (self.num_labels,)).to("cuda")  # a = a.to(b.device)
         # for i, thr in enumerate(nbest_weight):
         #     final += torch.nn.functional.one_hot(logits[i], self.num_labels) * thr
         return torch.tensor(0.0), final, targets
         # return TokenClassifierOutput(loss=loss, logits=final, labels=targets)
-        
 
 
 class DebertaV2CRFDataCollator(DataCollatorForTokenClassification):
     def torch_call(self, features):
         def tmpf(x):
-            x[0] = self.num_labels 
+            x[0] = self.num_labels
             x[-1] = self.num_labels + 1
             return x
+
         label_name = "label" if "label" in features[0].keys() else "labels"
-        labels = [tmpf(feature[label_name]) for feature in features] if label_name in features[0].keys() else None
+        labels = (
+            [tmpf(feature[label_name]) for feature in features]
+            if label_name in features[0].keys()
+            else None
+        )
         batch = self.tokenizer.pad(
             features,
-            padding=True, #'max_length', #self.padding,
-            max_length=300, # self.max_length,
-            pad_to_multiple_of=True, #self.pad_to_multiple_of,
+            padding=True,  #'max_length', #self.padding,
+            max_length=300,  # self.max_length,
+            pad_to_multiple_of=True,  # self.pad_to_multiple_of,
             return_tensors="pt" if labels is None else None,
         )
         if labels is None:
@@ -315,14 +359,15 @@ class DebertaV2CRFDataCollator(DataCollatorForTokenClassification):
         sequence_length = torch.tensor(batch["input_ids"]).shape[1]
 
         batch[label_name] = [
-            list(label) + [self.label_pad_token_id] * (sequence_length - len(label)) for label in labels
+            list(label) + [self.label_pad_token_id] * (sequence_length - len(label))
+            for label in labels
         ]
 
         batch = {k: torch.tensor(v, dtype=torch.int64) for k, v in batch.items()}
-        batch[label_name][batch[label_name]==-100] = 0
+        batch[label_name][batch[label_name] == -100] = 0
         return batch
-    
-    
+
+
 """
 huggingface -> trasformers trainer_pt_utils.py:115
         if tensors.shape[-1] == tensors.shape[-2] and \

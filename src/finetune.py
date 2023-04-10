@@ -2,7 +2,8 @@ import argparse, wandb, evaluate
 from ner_dataset import loadDataset
 import numpy as np
 import os
-os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
+
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
 
 from transformers import (
     AutoModelForTokenClassification,
@@ -10,7 +11,7 @@ from transformers import (
     AutoConfig,
     AutoTokenizer,
     DataCollatorForTokenClassification,
-    EarlyStoppingCallback
+    EarlyStoppingCallback,
 )
 
 
@@ -20,7 +21,7 @@ parser.add_argument("--base-model", type=str)
 parser.add_argument("--dataset", type=str)
 parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
-parser.add_argument("--sub-structure", type=str, default='')
+parser.add_argument("--sub-structure", type=str, default="")
 parser.add_argument("--substitude", type=int, default=0)
 args = parser.parse_args()
 
@@ -32,15 +33,19 @@ model_checkpoint = args.base_model
 # model_checkpoint = "distilbert-base-uncased"
 # model_checkpoint = "Jean-Baptiste/camembert-ner"
 
-sub_structure = "" 
+sub_structure = ""
 sub_structure += "-LOC" if args.only_loc else ""
-sub_structure += "" if args.fold  == -1 else "-fold"+str(args.fold)
-sub_structure += ("-" + args.sub_structure) if args.sub_structure and args.sub_structure != 'None' else ""
+sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
+sub_structure += (
+    ("-" + args.sub_structure)
+    if args.sub_structure and args.sub_structure != "None"
+    else ""
+)
 
 dataset_name = args.dataset
 batch_size = 100
 lr = 2e-5
-                                
+
 options = {
     "conll2003",
     "fewnerd",
@@ -71,7 +76,8 @@ tokenizer = AutoTokenizer.from_pretrained(
     model_checkpoint, use_fast=True, add_prefix_space=True
 )
 label_all_tokens = True
-padding_value = 0 if 'GP' in sub_structure else -100 
+padding_value = 0 if "GP" in sub_structure else -100
+
 
 def tokenize_and_align_labels(examples):
     tokenized_inputs = tokenizer(
@@ -101,27 +107,42 @@ def tokenize_and_align_labels(examples):
 
 tokenized_datasets = datasets.map(tokenize_and_align_labels, batched=True)
 
-from models.debertav2 import DebertaV2CRF, DebertaV2GlobalPointer, DebertaV2TokenClassification
-from models.debertav2 import DebertaV2CRFDataCollator, DebertaV2GlobalPointerDataCollator
+from models.debertav2 import (
+    DebertaV2CRF,
+    DebertaV2GlobalPointer,
+    DebertaV2TokenClassification,
+)
+from models.debertav2 import (
+    DebertaV2CRFDataCollator,
+    DebertaV2GlobalPointerDataCollator,
+)
 
 config = AutoConfig.from_pretrained(model_checkpoint, num_labels=len(label_list))
-structure_improve = args.sub_structure.split('-')
+structure_improve = args.sub_structure.split("-")
 # only possible substructure: CRF, GP, BiL
 Deberta_ModelZoo = {
-    'GP': (DebertaV2GlobalPointer, DebertaV2GlobalPointerDataCollator),
-    'CRF': (DebertaV2CRF, DebertaV2CRFDataCollator),
-    'BiL': (DebertaV2TokenClassification, DataCollatorForTokenClassification),
-    'other': (AutoModelForTokenClassification, DataCollatorForTokenClassification)
+    "GP": (DebertaV2GlobalPointer, DebertaV2GlobalPointerDataCollator),
+    "CRF": (DebertaV2CRF, DebertaV2CRFDataCollator),
+    "BiL": (DebertaV2TokenClassification, DataCollatorForTokenClassification),
+    "other": (AutoModelForTokenClassification, DataCollatorForTokenClassification),
 }
-assert not ('CRF' in structure_improve and 'GP' in structure_improve), 'CRF and GP can only use one of them!'
-if 'CRF' in structure_improve: ModelClass = Deberta_ModelZoo['CRF']
-elif 'GP' in structure_improve: ModelClass = Deberta_ModelZoo['GP']
-elif 'BiL' in structure_improve: ModelClass = Deberta_ModelZoo['BiL']
-else: ModelClass = Deberta_ModelZoo['other']
-config.BiLSTM = 'BiL' in structure_improve
+assert not (
+    "CRF" in structure_improve and "GP" in structure_improve
+), "CRF and GP can only use one of them!"
+if "CRF" in structure_improve:
+    ModelClass = Deberta_ModelZoo["CRF"]
+elif "GP" in structure_improve:
+    ModelClass = Deberta_ModelZoo["GP"]
+elif "BiL" in structure_improve:
+    ModelClass = Deberta_ModelZoo["BiL"]
+else:
+    ModelClass = Deberta_ModelZoo["other"]
+config.BiLSTM = "BiL" in structure_improve
 # config.num_labels = len(label_list) + 1 if 'CRF' in structure_improve else len(label_list)
 
-model = ModelClass[0].from_pretrained(model_checkpoint, ignore_mismatched_sizes=True, config=config)
+model = ModelClass[0].from_pretrained(
+    model_checkpoint, ignore_mismatched_sizes=True, config=config
+)
 # model = AutoModelForTokenClassification.from_pretrained(
 #     model_checkpoint, ignore_mismatched_sizes=True, config=config
 # )
@@ -154,21 +175,26 @@ args = TrainingArguments(
     # save_total_limit = 10
     optim="adamw_torch",
     lr_scheduler_type="cosine",
-    dataloader_num_workers=5 if 'GP' not in structure_improve else 0,
-    dataloader_pin_memory='GP' not in structure_improve,
-    metric_for_best_model='eval_f1',
+    dataloader_num_workers=5 if "GP" not in structure_improve else 0,
+    dataloader_pin_memory="GP" not in structure_improve,
+    metric_for_best_model="eval_f1",
     greater_is_better=True,
-    load_best_model_at_end=True
+    load_best_model_at_end=True,
 )
 
 from transformers import Trainer
 from transformers.modeling_outputs import TokenClassifierOutput
-from transformers.trainer import is_sagemaker_mp_enabled, nested_detach, ALL_LAYERNORM_LAYERS
+from transformers.trainer import (
+    is_sagemaker_mp_enabled,
+    nested_detach,
+    ALL_LAYERNORM_LAYERS,
+)
 from transformers.trainer_pt_utils import get_parameter_names
 import torch
 
+
 class NewTrainer(Trainer):
-    def prediction_step(self,model,inputs,prediction_loss_only,ignore_keys):
+    def prediction_step(self, model, inputs, prediction_loss_only, ignore_keys):
         inputs = self._prepare_inputs(inputs)
         with torch.no_grad():
             outputs = model(**inputs)
@@ -176,48 +202,67 @@ class NewTrainer(Trainer):
                 # loss, logits, labels = outputs
                 return outputs
             elif type(outputs) is TokenClassifierOutput:
-                return (outputs.loss, outputs.logits, inputs.get('labels', None))
+                return (outputs.loss, outputs.logits, inputs.get("labels", None))
             else:
                 # loss, logits = outputs
                 return (outputs.loss, outputs.logits, None)
 
     def create_optimizer(self):
-            """
-            Setup the optimizer.
-            We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
-            Trainer's init through `optimizers`, or subclass and override this method in a subclass.
-            """
-            opt_model = self.model_wrapped if is_sagemaker_mp_enabled() else self.model
+        """
+        Setup the optimizer.
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through `optimizers`, or subclass and override this method in a subclass.
+        """
+        opt_model = self.model_wrapped if is_sagemaker_mp_enabled() else self.model
 
-            if self.optimizer is None:
-                decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
-                decay_parameters = [name for name in decay_parameters if "bias" not in name]
-                faster_parameters = ['classifier', 'crf', 'lstm', 'gru', 'global_pointer']
-                optimizer_grouped_parameters = [
-                    {
-                        "params": [p for n, p in opt_model.named_parameters() if n in decay_parameters and not any(nn in n.lower() for nn in faster_parameters)],
-                        "weight_decay": self.args.weight_decay,
-                        "lr": 2e-5
-                    },
-                    {
-                        "params": [p for n, p in opt_model.named_parameters() if n not in decay_parameters and not any(nn in n.lower() for nn in faster_parameters)],
-                        "weight_decay": 0.0,
-                        "lr": 2e-5
-                    },
-                    {
-                        "params": [p for n, p in opt_model.named_parameters() if any(nn in n.lower() for nn in faster_parameters)],
-                        "weight_decay": self.args.weight_decay,
-                        "lr": 1.5e-4
-                    },
-                ]
+        if self.optimizer is None:
+            decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+            decay_parameters = [name for name in decay_parameters if "bias" not in name]
+            faster_parameters = ["classifier", "crf", "lstm", "gru", "global_pointer"]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [
+                        p
+                        for n, p in opt_model.named_parameters()
+                        if n in decay_parameters
+                        and not any(nn in n.lower() for nn in faster_parameters)
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                    "lr": 2e-5,
+                },
+                {
+                    "params": [
+                        p
+                        for n, p in opt_model.named_parameters()
+                        if n not in decay_parameters
+                        and not any(nn in n.lower() for nn in faster_parameters)
+                    ],
+                    "weight_decay": 0.0,
+                    "lr": 2e-5,
+                },
+                {
+                    "params": [
+                        p
+                        for n, p in opt_model.named_parameters()
+                        if any(nn in n.lower() for nn in faster_parameters)
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                    "lr": 1.5e-4,
+                },
+            ]
 
-                optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
-                self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
-            return self.optimizer
+            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(
+                self.args
+            )
+            self.optimizer = optimizer_cls(
+                optimizer_grouped_parameters, **optimizer_kwargs
+            )
+        return self.optimizer
+
 
 def compute_metrics(p):
     predictions, labels = p
-    labels = tokenized_datasets["validation"]['labels']
+    labels = tokenized_datasets["validation"]["labels"]
     predictions = np.argmax(predictions, axis=2)
 
     # Remove ignored index (special tokens)
@@ -236,6 +281,7 @@ def compute_metrics(p):
         "f1": results["overall_f1"],
         "accuracy": results["overall_accuracy"],
     }
+
 
 trainer = NewTrainer(
     model,

@@ -35,7 +35,7 @@ class BaseTokenClassification(BaseModel):
                 dropout=0.2,
                 bidirectional=True,
             )
-            self.classifier = nn.Linear(config.hidden_size*2, config.num_labels)
+            self.classifier = nn.Linear(config.hidden_size * 2, config.num_labels)
         else:
             self.classifier = nn.Linear(config.hidden_size, config.num_labels)
         self.use_lstm = config.lstm
@@ -86,13 +86,15 @@ class BaseGlobalPointer(BaseTokenClassification):
         super(BaseGlobalPointer, self).__init__(config)
         if efficient:
             self.global_pointer = EfficientGlobalPointer(
-                config.num_labels, head_size=head_size, 
-                hidden_size=config.hidden_size*(2 if self.use_lstm else 1)
+                config.num_labels,
+                head_size=head_size,
+                hidden_size=config.hidden_size * (2 if self.use_lstm else 1),
             )
         else:
             self.global_pointer = GlobalPointer(
-                config.num_labels, head_size=head_size, 
-                hidden_size=config.hidden_size*(2 if self.use_lstm else 1)
+                config.num_labels,
+                head_size=head_size,
+                hidden_size=config.hidden_size * (2 if self.use_lstm else 1),
             )
         del self.classifier
         del self.dropout

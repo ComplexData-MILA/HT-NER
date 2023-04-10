@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import torch
 
+
 def create_ner_conditional_masks(id2label: Dict[int, str]) -> torch.Tensor:
     """Create a NER-conditional mask matrix which implies the relations between
     before-tag and after-tag.

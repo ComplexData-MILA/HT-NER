@@ -129,6 +129,9 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --prediction ./results/HTLocation_chatgpt.csv \
             --prediction_column gpt_name
 
+        # Data Process For Human Trafficking Dataset
+        
+        python3 src/utils/data_preprocess/human_trafficking.py
         ```
 
 File Structure:
