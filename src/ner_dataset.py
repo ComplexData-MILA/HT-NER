@@ -1,3 +1,4 @@
+from functools import partial
 from datasets import load_dataset, load_metric, Dataset, DatasetDict
 import pandas as pd
 import os
@@ -7,7 +8,7 @@ from os.path import join as pj
 # datasets = load_dataset("tner/wnut2017")
 
 
-def load_street_name(root="/home/mila/h/hao.yu/ht/HTResearch/data/oda"):
+def load_street_name(root="../data/oda"):
     import json
     from glob import glob
 
@@ -43,14 +44,22 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["wikiner", "wikiner-en", "wikineren"]:
         assert root, "wikiner need root path"
         return wikiner(root)
-    elif ds_name in ["ht"]:
+    elif ds_name in ["HTName", "HTname", "htname"]:
         assert root, "HT dataset need root path"
-        return ht(root, kargs)
+        return ht_name(root, kargs)
+    elif ds_name in ["HTLocation", "HTlocation", "htlocation"]:
+        assert root, "HT dataset need root path"
+        return ht_location(root, kargs)
+    elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
+        assert root, "HT dataset need root path"
+        return ht_unsup(root, kargs)
     else:
         assert False, "Error, Please check names of datasets!"
 
 
-def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **kargs):
+def loadDataset(
+    ds_name, root="", unique="Location", substitude=False, fold=-1, **kargs
+):
     # by default, num of folds = 5, if fold == -1, not fold, otherwise, fold/5 th fold
     ds_name = ds_name.lower()
     assert ds_name in [
@@ -65,41 +74,58 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
         "wikiner",
         "wikiner-en",
         "wikineren",
-        "ht",
+        "HTName",
+        "HTLocation",
+        "HTUnsup",
+        "htname",
+        "htlocation",
+        "htunsup",
+        "HTname",
+        "HTlocation",
+        "HTunsup",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
     # postLoadDataset(ds, label_list, label_col_name)
     # only LOC
-    if onlyLoc:
+
+    def f(examples, B="B-LOC", I="I-LOC", k="loc", col_name="tags"):
+        new_label = []
+        for l in examples[label_col_name]:
+            if type(l[0]) == int:
+                new_label.append(
+                    [
+                        (I if "I-" in label_list[ll] else B)
+                        if k in label_list[ll].lower()
+                        else "O"
+                        for ll in l
+                    ]
+                )
+            else:
+                new_label.append(
+                    [(I if "I-" in ll else B) if k in ll.lower() else "O" for ll in l]
+                )
+        examples[col_name] = new_label
+        return examples
+
+    if unique == "Location":
         new_label_list = ["O", "B-LOC", "I-LOC"]
-
-        def f(examples):
-            new_label = []
-            for l in examples[label_col_name]:
-                if type(l[0]) == int:
-                    new_label.append(
-                        [
-                            ("I-LOC" if "I-" in label_list[ll] else "B-LOC")
-                            if "loc" in label_list[ll].lower()
-                            else "O"
-                            for ll in l
-                        ]
-                    )
-                else:
-                    new_label.append(
-                        [
-                            ("I-LOC" if "I-" in ll else "B-LOC")
-                            if "loc" in ll.lower()
-                            else "O"
-                            for ll in l
-                        ]
-                    )
-            examples["newtags"] = new_label
-            return examples
-
-        ds = ds.map(f, batched=True)
         label_col_name = "newtags"
+        ds = ds.map(
+            partial(f, B="B-LOC", I="I-LOC", k="loc", col=label_col_name), batched=True
+        )
         label_list = new_label_list
+    elif unique == "Name":
+        new_label_list = ["O", "B-NAME", "I-NAME"]
+        label_col_name = "newtags"
+        ds = ds.map(
+            partial(f, B="B-NAME", I="I-NAME", k="name", col=label_col_name),
+            batched=True,
+        )
+        label_list = new_label_list
+    elif unique == "":
+        pass
+    else:
+        assert False, "Error, Please check [unique]!"
 
     if substitude:
         street_data = load_street_name()  # {'city': list [street name]}
@@ -514,8 +540,7 @@ def fewnerd(root, only_l1=False):
 
 def ontonotev5(root):
     # only english
-
-    pass
+    assert NotImplemented
 
 
 def wikiner(root, language="en"):
@@ -565,28 +590,75 @@ def wikiner(root, language="en"):
     return datasets, label_list, "tags"
 
 
-def ht(root, kargs):
+def ht_name(root, kargs):
+    import pandas as pd
+
+    full_df = help_load(pd.read_csv(pj(root, "HTName_tokenized.csv")))
+
+    if kargs.get("filter_empty_label", False):
+        contain_label = []
+        for i, t in full_df.iterrows():
+            if "B-LOC" in t["tags"]:
+                contain_label.append(i)
+
+        full_df = full_df.iloc[contain_label]
+
+    tds = vds = Dataset.from_pandas(full_df)
+    datasets = DatasetDict()
+    datasets["train"] = tds
+    datasets["validation"] = vds
+    label_list = ["O", "B-NAME", "I-NAME"]
+    return datasets, label_list, "tags"
+
+
+def ht_location(root, kargs):
     import pandas as pd
 
     street_only = kargs.get("street", False)
     full_df = help_load(
         pd.read_csv(
-            pj(root, "ht_tokenized_street.csv" if street_only else "ht_tokenized.csv")
+            pj(
+                root,
+                "HTLocation_tokenized_street.csv"
+                if street_only
+                else "HTLocation_tokenized.csv",
+            )
         )
     )
 
-    # contain_label = []
-    # for i,t in full_df.iterrows():
-    #     if 'B-LOC' in t["tags"]:
-    #        contain_label.append(i)
-
-    # full_df = full_df.iloc[contain_label]
+    if kargs.get("filter_empty_label", False):
+        contain_label = []
+        for i, t in full_df.iterrows():
+            if "B-LOC" in t["tags"]:
+                contain_label.append(i)
+        full_df = full_df.iloc[contain_label]
 
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
     datasets["train"] = tds
     datasets["validation"] = vds
     label_list = ["O", "B-LOC", "I-LOC"]
+    return datasets, label_list, "tags"
+
+
+def ht_unsup(root, kargs):
+    import pandas as pd
+
+    full_df = help_load(pd.read_csv(pj(root, "HTUnsup_tokenized.csv")))
+
+    if kargs.get("filter_empty_label", False):
+        contain_label = []
+        ls = set(["B-LOC", "B-NAME"])
+        for i, t in full_df.iterrows():
+            if ls.intersection(t["tags"]):
+                contain_label.append(i)
+        full_df = full_df.iloc[contain_label]
+
+    tds = vds = Dataset.from_pandas(full_df)
+    datasets = DatasetDict()
+    datasets["train"] = tds
+    datasets["validation"] = vds
+    label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
     return datasets, label_list, "tags"
 
 
@@ -641,8 +713,25 @@ if __name__ == "__main__":
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=False, fold=-1)[0]['train']['tokens'][4])
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=False, fold=-1)[0]['train']['ner_tags'][4])
-    
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=True, fold=-1)[0]['train']['tokens'][4])
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=True, fold=-1)[0]['train']['newtags'][4])
+
+    print(
+        loadDataset("conll2003", root="", onlyLoc=False, substitude=False, fold=-1)[0][
+            "train"
+        ]["tokens"][4]
+    )
+    print(
+        loadDataset("conll2003", root="", onlyLoc=False, substitude=False, fold=-1)[0][
+            "train"
+        ]["ner_tags"][4]
+    )
+
+    print(
+        loadDataset("conll2003", root="", onlyLoc=False, substitude=True, fold=-1)[0][
+            "train"
+        ]["tokens"][4]
+    )
+    print(
+        loadDataset("conll2003", root="", onlyLoc=False, substitude=True, fold=-1)[0][
+            "train"
+        ]["newtags"][4]
+    )

@@ -8,3 +8,4 @@ wandb/**/*
 .*/
 tmp_*.pkl
 results/**/*
+analysis.ipynb

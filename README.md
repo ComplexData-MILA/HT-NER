@@ -78,55 +78,55 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --pred './prediction/HT1K_finetune.csv'
             --predition_column name location social_media -->
 
-    - Full Experiemnt
+    - Full Command:
         ```
-        # ChatGPT on locanto7k
+        # ChatGPT on HTUnsup
 
-        python3 openai_gpt.py \
-            --data ./data/locanto_7k.csv \
-            --save_path ./results/locanto_7k_chatgpt.csv \
+        python3 src/openai_gpt.py \
+            --data ./data/HTUnsup.csv \
+            --save_path ./results/HTUnsup_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
         
-        python3 process_response.py \
-            --data ./results/locanto_7k_chatgpt.csv \
-            --save_path ./results/locanto_7k_chatgpt.csv
-        
-        # ChatGPT on unified location
+        python3 src/process_response.py \
+            --data ./results/HTUnsup_chatgpt.csv \
+            --save_path ./results/HTUnsup_chatgpt.csv
 
-        python3 openai_gpt.py \
-            --data ./data/unified_locanto.csv \
-            --save_path ./results/unified_locanto_chatgpt.csv \
+
+        # ChatGPT on HTName
+
+        python3 src/openai_gpt.py \
+            --data ./data/HTName.csv \
+            --save_path ./data/HTName_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 process_response.py \
-            --data ./results/unified_locanto_chatgpt.csv \
-            --save_path ./results/unified_locanto_chatgpt.csv
+        python3 src/process_response.py \
+            --data ./results/HTName_chatgpt.csv \
+            --save_path ./results/HTName_chatgpt.csv
 
-        <!-- python3 evaluate.py \
-            --ground_truth ./results/unified_locanto_chatgpt.csv  \
+        python3 src/evaluate.py \
+            --ground_truth ./results/HTName_chatgpt.csv  \
             --ground_truth_column label \
-            --prediction ./results/unified_locanto_chatgpt.csv \
-            --prediction_column gpt_name -->
+            --prediction ./results/HTName_chatgpt.csv \
+            --prediction_column gpt_name
 
+        # ChatGPT on HTLocation
 
-        # ChatGPT on HT1K
-
-        python3 openai_gpt.py \
-            --data ./data/ht1k_combine.csv \
-            --save_path ./data/ht1k_combine_chatgpt.csv \
+        python3 src/openai_gpt.py \
+            --data ./data/HTLocation.csv \
+            --save_path ./results/HTLocation_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 process_response.py \
-            --data ./results/ht1k_combine_chatgpt.csv \
-            --save_path ./results/ht1k_combine_chatgpt.csv
+        python3 src/process_response.py \
+            --data ./results/HTLocation_chatgpt.csv \
+            --save_path ./results/HTLocation_chatgpt.csv
 
-        python3 evaluate.py \
-            --ground_truth ./results/ht1k_combine_chatgpt.csv  \
+        python3 src/evaluate.py \
+            --ground_truth ./results/HTLocation_chatgpt.csv  \
             --ground_truth_column label \
-            --prediction ./results/ht1k_combine_chatgpt.csv \
+            --prediction ./results/HTLocation_chatgpt.csv \
             --prediction_column gpt_name
 
         ```

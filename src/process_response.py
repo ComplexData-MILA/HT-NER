@@ -1,6 +1,7 @@
 from typing import Dict, List
 import pandas as pd
 
+
 def postprocess(df: pd.DataFrame, results: List[Dict]):
     total_usages, locations, names, social_media = [], [], [], []
 
@@ -29,10 +30,13 @@ def postprocess(df: pd.DataFrame, results: List[Dict]):
                 .replace("\n", "|")
                 .replace(", ", "|")
             )
-            
-            if name == "N": name = ""
-            if location == "N": location = ""
-            if social == "N": social = ""
+
+            if name == "N":
+                name = ""
+            if location == "N":
+                location = ""
+            if social == "N":
+                social = ""
         except:
             # if len(res) <= 5: name = location = social = 'N'
             name, location, social = "", "", ""
@@ -55,9 +59,12 @@ def postprocess(df: pd.DataFrame, results: List[Dict]):
                     print(repr(content))
                     # name = location = social = 'N'
                     break
-                if name == "N": name = ""
-                if location == "N": location = ""
-                if social == "N": social = ""
+                if name == "N":
+                    name = ""
+                if location == "N":
+                    location = ""
+                if social == "N":
+                    social = ""
             # if not name: name = 'N'
             # if not location: location = 'N'
             # if not social: social = 'N'
@@ -78,6 +85,8 @@ def postprocess(df: pd.DataFrame, results: List[Dict]):
 if __name__ == "__main__":
     import argparse
     import json
+
+    pd.DataFrame().drop
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str)

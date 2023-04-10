@@ -24,25 +24,29 @@
 
 import pandas as pd
 
-files = ['./train.txt', './test.txt', './dev.txt']
+files = ["./train.txt", "./test.txt", "./dev.txt"]
 
 for file in files:
-    with open(file, 'r', encoding='utf-8') as f:
+    with open(file, "r", encoding="utf-8") as f:
         lines = f.readlines()
         lines = [line.strip() for line in lines]
-    
+
     texts, tags, tags_l1 = [[]], [[]], [[]]
 
     for line in lines:
         if line:
-            text, tag = line.split('\t')
+            text, tag = line.split("\t")
             texts[-1].append(text)
             tags[-1].append(tag)
-            tags_l1[-1].append(tag.split('-')[0])
+            tags_l1[-1].append(tag.split("-")[0])
         else:
             texts.append([])
             tags.append([])
             tags_l1.append([])
-            
-    pd.DataFrame({'text': texts, 'tag': tags}).to_csv(file.replace('.txt', '.csv'), index=False)
-    pd.DataFrame({'text': texts, 'tag': tags_l1}).to_csv(file.replace('.txt', '_l1.csv'), index=False)
+
+    pd.DataFrame({"text": texts, "tag": tags}).to_csv(
+        file.replace(".txt", ".csv"), index=False
+    )
+    pd.DataFrame({"text": texts, "tag": tags_l1}).to_csv(
+        file.replace(".txt", "_l1.csv"), index=False
+    )
