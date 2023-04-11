@@ -25,9 +25,9 @@ for file in files:
             tags.append([])
             tags_l1.append([])
 
-    pd.DataFrame({"text": texts, "tag": tags}).to_csv(
+    pd.DataFrame({"tokens": texts, "tags": tags}).to_csv(
         pj(cache_path, file.replace(".txt", ".csv")), index=False
     )
-    pd.DataFrame({"text": texts, "tag": tags_l1}).to_csv(
+    pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
         pj(cache_path, file.replace(".txt", "_L1.csv")), index=False
     )

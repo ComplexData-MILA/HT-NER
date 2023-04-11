@@ -1,3 +1,4 @@
+# %%
 from functools import partial
 from datasets import load_dataset, load_metric, Dataset, DatasetDict
 import pandas as pd
@@ -57,9 +58,8 @@ def _loadWrapper(ds_name, root, kargs):
         assert False, "Error, Please check names of datasets!"
 
 
-def loadDataset(
-    ds_name, root="", unique="Location", substitude=False, fold=-1, **kargs
-):
+def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs):
+    print("Loading Dataset: ", ds_name)
     # by default, num of folds = 5, if fold == -1, not fold, otherwise, fold/5 th fold
     ds_name = ds_name.lower()
     assert ds_name in [
@@ -88,9 +88,9 @@ def loadDataset(
     # postLoadDataset(ds, label_list, label_col_name)
     # only LOC
 
-    def f(examples, B="B-LOC", I="I-LOC", k="loc", col_name="tags"):
+    def map_fn(examples, B="B-LOC", I="I-LOC", k="loc", col_name="tags"):
         new_label = []
-        for l in examples[label_col_name]:
+        for l in examples[col_name]:
             if type(l[0]) == int:
                 new_label.append(
                     [
@@ -108,20 +108,17 @@ def loadDataset(
         return examples
 
     if unique == "Location":
-        new_label_list = ["O", "B-LOC", "I-LOC"]
-        label_col_name = "newtags"
+        label_list = ["O", "B-LOC", "I-LOC"]
         ds = ds.map(
-            partial(f, B="B-LOC", I="I-LOC", k="loc", col=label_col_name), batched=True
-        )
-        label_list = new_label_list
-    elif unique == "Name":
-        new_label_list = ["O", "B-NAME", "I-NAME"]
-        label_col_name = "newtags"
-        ds = ds.map(
-            partial(f, B="B-NAME", I="I-NAME", k="name", col=label_col_name),
+            partial(map_fn, B="B-LOC", I="I-LOC", k="loc", col_name=label_col_name),
             batched=True,
         )
-        label_list = new_label_list
+    elif unique == "Name":
+        label_list = ["O", "B-NAME", "I-NAME"]
+        ds = ds.map(
+            partial(map_fn, B="B-NAME", I="I-NAME", k="name", col_name=label_col_name),
+            batched=True,
+        )
     elif unique == "":
         pass
     else:
@@ -263,14 +260,14 @@ def wnut2017(root=""):
 
 
 def fewnerd_onlyI(root, only_l1=False):
-    if (only_l1 and not os.path.exists(pj(root, "train_l1.csv"))) or (
+    if (only_l1 and not os.path.exists(pj(root, "train_L1.csv"))) or (
         not only_l1 and not os.path.exists(pj(root, "train.csv"))
     ):
-
-        files = ["./train.txt", "./test.txt", "./dev.txt"]
-
-        for file in files:
-            with open(pj(root, file), "r", encoding="utf-8") as f:
+        data_path = "./data/Few-NERD/"
+        # cache_path = "./data/cache/Few-NERD/"
+        os.makedirs(root, exist_ok=True)
+        for file in ["train.txt", "test.txt", "dev.txt"]:
+            with open(pj(data_path, file), "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 lines = [line.strip() for line in lines]
 
@@ -288,22 +285,23 @@ def fewnerd_onlyI(root, only_l1=False):
                     tags_l1.append([])
 
             pd.DataFrame({"tokens": texts, "tags": tags}).to_csv(
-                pj(root, file).replace(".txt", ".csv"), index=False
+                pj(root, file.replace(".txt", ".csv")), index=False
             )
             pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
-                pj(root, file).replace(".txt", "_l1.csv"), index=False
+                pj(root, file.replace(".txt", "_L1.csv")), index=False
             )
+
 
     tds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "train_l1.csv" if only_l1 else "train.csv")), toIO
+            pd.read_csv(pj(root, "train_L1.csv" if only_l1 else "train.csv")), toIO
         )
     )
     vds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "test_l1.csv" if only_l1 else "test.csv")), toIO)
+        help_load(pd.read_csv(pj(root, "test_L1.csv" if only_l1 else "test.csv")), toIO)
     )
     devds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "dev_l1.csv" if only_l1 else "dev.csv")), toIO)
+        help_load(pd.read_csv(pj(root, "dev_L1.csv" if only_l1 else "dev.csv")), toIO)
     )
 
     datasets = DatasetDict()
@@ -399,14 +397,15 @@ def fewnerd_onlyI(root, only_l1=False):
 
 
 def fewnerd(root, only_l1=False):
-    if (only_l1 and not os.path.exists(pj(root, "train_l1.csv"))) or (
+    if (only_l1 and not os.path.exists(pj(root, "train_L1.csv"))) or (
         not only_l1 and not os.path.exists(pj(root, "train.csv"))
     ):
 
-        files = ["./train.txt", "./test.txt", "./dev.txt"]
-
-        for file in files:
-            with open(pj(root, file), "r", encoding="utf-8") as f:
+        data_path = "./data/Few-NERD/"
+        # cache_path = "./data/cache/Few-NERD/"
+        os.makedirs(root, exist_ok=True)
+        for file in ["train.txt", "test.txt", "dev.txt"]:
+            with open(pj(data_path, file), "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 lines = [line.strip() for line in lines]
 
@@ -424,24 +423,24 @@ def fewnerd(root, only_l1=False):
                     tags_l1.append([])
 
             pd.DataFrame({"tokens": texts, "tags": tags}).to_csv(
-                pj(root, file).replace(".txt", ".csv"), index=False
+                pj(root, file.replace(".txt", ".csv")), index=False
             )
             pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
-                pj(root, file).replace(".txt", "_l1.csv"), index=False
+                pj(root, file.replace(".txt", "_L1.csv")), index=False
             )
 
     tds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "train_l1.csv" if only_l1 else "train.csv")), toBIO
+            pd.read_csv(pj(root, "train_L1.csv" if only_l1 else "train.csv")), toBIO
         )
     )
     vds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "test_l1.csv" if only_l1 else "test.csv")), toBIO
+            pd.read_csv(pj(root, "test_L1.csv" if only_l1 else "test.csv")), toBIO
         )
     )
     devds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "dev_l1.csv" if only_l1 else "dev.csv")), toBIO)
+        help_load(pd.read_csv(pj(root, "dev_L1.csv" if only_l1 else "dev.csv")), toBIO)
     )
 
     datasets = DatasetDict()
@@ -699,29 +698,23 @@ def help_load(df, f=None):
     return df
 
 
+# %%
 if __name__ == "__main__":
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint
 
-    print(
-        loadDataset("conll2003", root="", onlyLoc=False, substitude=False, fold=-1)[0][
-            "train"
-        ]["tokens"][4]
-    )
-    print(
-        loadDataset("conll2003", root="", onlyLoc=False, substitude=False, fold=-1)[0][
-            "train"
-        ]["ner_tags"][4]
-    )
+    print(loadDataset("conll2003")[0]["train"]["tokens"][4])
+    print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
 
     print(
-        loadDataset("conll2003", root="", onlyLoc=False, substitude=True, fold=-1)[0][
-            "train"
-        ]["tokens"][4]
+        loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
     )
     print(
-        loadDataset("conll2003", root="", onlyLoc=False, substitude=True, fold=-1)[0][
-            "train"
-        ]["newtags"][4]
+        loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"][
+            "tokens"
+        ][4]
     )
+    print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])
