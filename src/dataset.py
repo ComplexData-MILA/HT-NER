@@ -1,3 +1,5 @@
+# %%
+from functools import partial
 from datasets import load_dataset, load_metric, Dataset, DatasetDict
 import pandas as pd
 import os
@@ -6,19 +8,23 @@ from os.path import join as pj
 # datasets = load_dataset("conll2003")
 # datasets = load_dataset("tner/wnut2017")
 
-def load_street_name(root='/home/mila/h/hao.yu/ht/HTResearch/data/oda'):
+
+def load_street_name(root="../data/oda"):
     import json
     from glob import glob
-    
+
     all_data = {}
-    state_short = ['AB','BC','MB','NB','NS','NT','ON','PE','QC','SK']
+    state_short = ["AB", "BC", "MB", "NB", "NS", "NT", "ON", "PE", "QC", "SK"]
     for state in state_short:
-        with open(pj(root, f"{state}_processed_streets.json"), 'r',encoding='utf-16') as f:
+        with open(
+            pj(root, f"{state}_processed_streets.json"), "r", encoding="utf-16"
+        ) as f:
             content = json.load(f)
             all_data.update(content)
-    print('Finish Loading Street Names from CA Open Source.')        
+    print("Finish Loading Street Names from CA Open Source.")
     return all_data
-    
+
+
 def _loadWrapper(ds_name, root, kargs):
     if ds_name in ["conll2003", "conll-2003"]:
         return conll2003()
@@ -39,14 +45,21 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["wikiner", "wikiner-en", "wikineren"]:
         assert root, "wikiner need root path"
         return wikiner(root)
-    elif ds_name in ["ht"]:
+    elif ds_name in ["HTName", "HTname", "htname"]:
         assert root, "HT dataset need root path"
-        return ht(root, kargs)
+        return ht_name(root, kargs)
+    elif ds_name in ["HTUnified", "HTunified", "htunified"]:
+        assert root, "HT dataset need root path"
+        return ht_unified(root, kargs)
+    elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
+        assert root, "HT dataset need root path"
+        return ht_unsup(root, kargs)
     else:
         assert False, "Error, Please check names of datasets!"
 
 
-def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **kargs):
+def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs):
+    print("Loading Dataset: ", ds_name)
     # by default, num of folds = 5, if fold == -1, not fold, otherwise, fold/5 th fold
     ds_name = ds_name.lower()
     assert ds_name in [
@@ -61,72 +74,92 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
         "wikiner",
         "wikiner-en",
         "wikineren",
-        "ht",
+        "HTName",
+        "HTUnified",
+        "HTUnsup",
+        "htname",
+        "htunified",
+        "htunsup",
+        "HTname",
+        "HTlocation",
+        "HTunified",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
     # postLoadDataset(ds, label_list, label_col_name)
     # only LOC
-    if onlyLoc:
-        new_label_list = ["O", "B-LOC", "I-LOC"]
 
-        def f(examples):
-            new_label = []
-            for l in examples[label_col_name]:
-                if type(l[0]) == int:
-                    new_label.append(
-                        [
-                            ("I-LOC" if "I-" in label_list[ll] else "B-LOC")
-                            if "loc" in label_list[ll].lower()
-                            else "O"
-                            for ll in l
-                        ]
-                    )
-                else:
-                    new_label.append(
-                        [
-                            ("I-LOC" if "I-" in ll else "B-LOC")
-                            if "loc" in ll.lower()
-                            else "O"
-                            for ll in l
-                        ]
-                    )
-            examples["newtags"] = new_label
-            return examples
+    def map_fn(examples, B="B-LOC", I="I-LOC", k="loc", col_name="tags"):
+        new_label = []
+        for l in examples[col_name]:
+            if type(l[0]) == int:
+                new_label.append(
+                    [
+                        (I if "I-" in label_list[ll] else B)
+                        if k in label_list[ll].lower()
+                        else "O"
+                        for ll in l
+                    ]
+                )
+            else:
+                new_label.append(
+                    [(I if "I-" in ll else B) if k in ll.lower() else "O" for ll in l]
+                )
+        examples[col_name] = new_label
+        return examples
 
-        ds = ds.map(f, batched=True)
-        label_col_name = "newtags"
-        label_list = new_label_list
-        
+    if unique == "Location":
+        label_list = ["O", "B-LOC", "I-LOC"]
+        ds = ds.map(
+            partial(map_fn, B="B-LOC", I="I-LOC", k="loc", col_name=label_col_name),
+            batched=True,
+        )
+    elif unique == "Name":
+        label_list = ["O", "B-NAME", "I-NAME"]
+        ds = ds.map(
+            partial(map_fn, B="B-NAME", I="I-NAME", k="name", col_name=label_col_name),
+            batched=True,
+        )
+    elif unique == "":
+        pass
+    else:
+        assert False, "Error, Please check [unique]!"
+
     if substitude:
-        street_data = load_street_name() # {'city': list [street name]}
+        street_data = load_street_name()  # {'city': list [street name]}
         # street_data_classified_by_length = {i:[street for city in street_data.values() for street in city if (street)==i] for i in range(1, 10)}
-        street_list = [street for city in street_data.values() for street in city] + list(street_data.keys()) * 10
+        street_list = [
+            street for city in street_data.values() for street in city
+        ] + list(street_data.keys()) * 10
         street_list = list(set(street_list))
         street_list.sort()
-        loc_tag = [l for l in label_list if 'loc' in l.lower()]
-        
+        loc_tag = [l for l in label_list if "loc" in l.lower()]
+
         # import matplotlib.pyplot as plt
         # plt.hist(list(map(len, street_list)), bins=20)
         # plt.show()
         # plt.savefig('tmp.png')
         # print(len(street_list))
-        
+
         import random
+
         random.seed(2022)
         random.shuffle(street_list)
         from nltk.tokenize import RegexpTokenizer
+
         tokenizer = RegexpTokenizer(r"[/|(|)|{|}|$|?|!]|\w+|\$[\d\.]+|\S+")
+
         def f(examples):
             new_label = []
             new_token = []
             from itertools import groupby
-            for t, l in zip(examples['tokens'], examples[label_col_name]):
+
+            for t, l in zip(examples["tokens"], examples[label_col_name]):
                 l = [label_list[x] for x in l] if type(l[0]) == int else l
-                
-                groups = [[[],[]]]
+
+                groups = [[[], []]]
                 for i, (tt, ll) in enumerate(zip(t, l)):
-                    if (ll in loc_tag) != (l[i-1] in loc_tag):
-                        groups.append([[],[]])
+                    if (ll in loc_tag) != (l[i - 1] in loc_tag):
+                        groups.append([[], []])
                     groups[-1][0].append(tt)
                     groups[-1][1].append(ll)
 
@@ -134,12 +167,13 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
                 new_label.append([])
                 # print(groups)
                 for tt, ll in groups:
-                    if not (tt or ll): continue
+                    if not (tt or ll):
+                        continue
                     if ll[0] in loc_tag:
                         new_string = random.choice(street_list)
                         tt = tokenizer.tokenize(new_string)
                         if len(ll) == 1 and len(tt) > 1:
-                            ll += [ll[0].replace('B-','I-')] * (len(tt) - 1)
+                            ll += [ll[0].replace("B-", "I-")] * (len(tt) - 1)
                         else:
                             ll = [ll[0]] + [ll[-1]] * (len(tt) - 1)
                         new_token[-1].extend(tt)
@@ -147,18 +181,18 @@ def loadDataset(ds_name, root="", onlyLoc=False, substitude=False, fold=-1, **ka
                     else:
                         new_token[-1].extend(tt)
                         new_label[-1].extend(ll)
-                        
+
             examples["newtags"] = new_label
             examples["tokens"] = new_token
             return examples
 
         ds = ds.map(f, batched=True)
         label_col_name = "newtags"
-        
+
     if fold != -1:
         assert fold >= 5 or fold < -1
-        from sklearn.model_selection import StratifiedKFold
         import numpy as np
+        from sklearn.model_selection import StratifiedKFold
 
         folds = StratifiedKFold(n_splits=5)
         splits = folds.split(
@@ -226,14 +260,14 @@ def wnut2017(root=""):
 
 
 def fewnerd_onlyI(root, only_l1=False):
-    if (only_l1 and not os.path.exists(pj(root, "train_l1.csv"))) or (
+    if (only_l1 and not os.path.exists(pj(root, "train_L1.csv"))) or (
         not only_l1 and not os.path.exists(pj(root, "train.csv"))
     ):
-
-        files = ["./train.txt", "./test.txt", "./dev.txt"]
-
-        for file in files:
-            with open(pj(root, file), "r", encoding="utf-8") as f:
+        data_path = "./data/Few-NERD/"
+        # cache_path = "./data/cache/Few-NERD/"
+        os.makedirs(root, exist_ok=True)
+        for file in ["train.txt", "test.txt", "dev.txt"]:
+            with open(pj(data_path, file), "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 lines = [line.strip() for line in lines]
 
@@ -251,22 +285,22 @@ def fewnerd_onlyI(root, only_l1=False):
                     tags_l1.append([])
 
             pd.DataFrame({"tokens": texts, "tags": tags}).to_csv(
-                pj(root, file).replace(".txt", ".csv"), index=False
+                pj(root, file.replace(".txt", ".csv")), index=False
             )
             pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
-                pj(root, file).replace(".txt", "_l1.csv"), index=False
+                pj(root, file.replace(".txt", "_L1.csv")), index=False
             )
 
     tds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "train_l1.csv" if only_l1 else "train.csv")), toIO
+            pd.read_csv(pj(root, "train_L1.csv" if only_l1 else "train.csv")), toIO
         )
     )
     vds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "test_l1.csv" if only_l1 else "test.csv")), toIO)
+        help_load(pd.read_csv(pj(root, "test_L1.csv" if only_l1 else "test.csv")), toIO)
     )
     devds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "dev_l1.csv" if only_l1 else "dev.csv")), toIO)
+        help_load(pd.read_csv(pj(root, "dev_L1.csv" if only_l1 else "dev.csv")), toIO)
     )
 
     datasets = DatasetDict()
@@ -362,14 +396,15 @@ def fewnerd_onlyI(root, only_l1=False):
 
 
 def fewnerd(root, only_l1=False):
-    if (only_l1 and not os.path.exists(pj(root, "train_l1.csv"))) or (
+    if (only_l1 and not os.path.exists(pj(root, "train_L1.csv"))) or (
         not only_l1 and not os.path.exists(pj(root, "train.csv"))
     ):
 
-        files = ["./train.txt", "./test.txt", "./dev.txt"]
-
-        for file in files:
-            with open(pj(root, file), "r", encoding="utf-8") as f:
+        data_path = "./data/Few-NERD/"
+        # cache_path = "./data/cache/Few-NERD/"
+        os.makedirs(root, exist_ok=True)
+        for file in ["train.txt", "test.txt", "dev.txt"]:
+            with open(pj(data_path, file), "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 lines = [line.strip() for line in lines]
 
@@ -387,24 +422,24 @@ def fewnerd(root, only_l1=False):
                     tags_l1.append([])
 
             pd.DataFrame({"tokens": texts, "tags": tags}).to_csv(
-                pj(root, file).replace(".txt", ".csv"), index=False
+                pj(root, file.replace(".txt", ".csv")), index=False
             )
             pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
-                pj(root, file).replace(".txt", "_l1.csv"), index=False
+                pj(root, file.replace(".txt", "_L1.csv")), index=False
             )
 
     tds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "train_l1.csv" if only_l1 else "train.csv")), toBIO
+            pd.read_csv(pj(root, "train_L1.csv" if only_l1 else "train.csv")), toBIO
         )
     )
     vds = Dataset.from_pandas(
         help_load(
-            pd.read_csv(pj(root, "test_l1.csv" if only_l1 else "test.csv")), toBIO
+            pd.read_csv(pj(root, "test_L1.csv" if only_l1 else "test.csv")), toBIO
         )
     )
     devds = Dataset.from_pandas(
-        help_load(pd.read_csv(pj(root, "dev_l1.csv" if only_l1 else "dev.csv")), toBIO)
+        help_load(pd.read_csv(pj(root, "dev_L1.csv" if only_l1 else "dev.csv")), toBIO)
     )
 
     datasets = DatasetDict()
@@ -503,8 +538,7 @@ def fewnerd(root, only_l1=False):
 
 def ontonotev5(root):
     # only english
-
-    pass
+    assert NotImplemented
 
 
 def wikiner(root, language="en"):
@@ -554,25 +588,65 @@ def wikiner(root, language="en"):
     return datasets, label_list, "tags"
 
 
-def ht(root, kargs):
+def ht_name(root, kargs):
     import pandas as pd
-    street_only = kargs.get('street', False)
-    full_df = help_load(pd.read_csv(pj(root, "ht_tokenized_street.csv" 
-                                       if street_only
-                                       else "ht_tokenized.csv")))
-    
-    # contain_label = []
-    # for i,t in full_df.iterrows():
-    #     if 'B-LOC' in t["tags"]:
-    #        contain_label.append(i)
-           
-    # full_df = full_df.iloc[contain_label] 
-    
+
+    full_df = help_load(pd.read_csv(pj(root, "HTName_tokenized.csv")))
+
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     for i, t in full_df.iterrows():
+    #         if "B-LOC" in t["tags"]:
+    #             contain_label.append(i)
+
+    #     full_df = full_df.iloc[contain_label]
+
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
     datasets["train"] = tds
     datasets["validation"] = vds
-    label_list = ["O", "B-LOC", "I-LOC"]
+    label_list = ["O", "B-NAME", "I-NAME"]
+    return datasets, label_list, "tags"
+
+
+def ht_unified(root, kargs):
+    import pandas as pd
+
+    full_df = help_load(pd.read_csv(pj(root, "HTUnified_tokenized.csv")))
+
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     for i, t in full_df.iterrows():
+    #         if "B-LOC" in t["tags"]:
+    #             contain_label.append(i)
+    #     full_df = full_df.iloc[contain_label]
+
+    tds = vds = Dataset.from_pandas(full_df)
+    datasets = DatasetDict()
+    datasets["train"] = tds
+    datasets["validation"] = vds
+    label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
+    return datasets, label_list, "tags"
+
+
+def ht_unsup(root, kargs):
+    import pandas as pd
+
+    full_df = help_load(pd.read_csv(pj(root, "HTUnsup_tokenized.csv")))
+
+    # if kargs.get("filter_empty_label", False):
+    #     contain_label = []
+    #     ls = set(["B-LOC", "B-NAME"])
+    #     for i, t in full_df.iterrows():
+    #         if ls.intersection(t["tags"]):
+    #             contain_label.append(i)
+    #     full_df = full_df.iloc[contain_label]
+
+    tds = vds = Dataset.from_pandas(full_df)
+    datasets = DatasetDict()
+    datasets["train"] = tds
+    datasets["validation"] = vds
+    label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
     return datasets, label_list, "tags"
 
 
@@ -623,13 +697,23 @@ def help_load(df, f=None):
     return df
 
 
+# %%
 if __name__ == "__main__":
-    pass
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=False, fold=-1)[0]['train']['tokens'][4])
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=False, fold=-1)[0]['train']['ner_tags'][4])
-    
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=True, fold=-1)[0]['train']['tokens'][4])
-    print(loadDataset('conll2003', root="", onlyLoc=False, substitude=True, fold=-1)[0]['train']['newtags'][4])
+
+    print(loadDataset("conll2003")[0]["train"]["tokens"][4])
+    print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
+
+    print(
+        loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
+    )
+    print(
+        loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
+            4
+        ]
+    )
+    print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])

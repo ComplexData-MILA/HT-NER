@@ -6,3 +6,6 @@ data/**/*
 wandb/**/*
 **/__pycache__
 .*/
+tmp_*.pkl
+results/**/*
+analysis.ipynb
