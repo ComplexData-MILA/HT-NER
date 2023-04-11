@@ -81,7 +81,7 @@ def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs)
         "htunified",
         "htunsup",
         "HTname",
-        "HTlocation",
+        "HTunsup",
         "HTunified",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)

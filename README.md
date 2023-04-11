@@ -101,19 +101,25 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --prediction ./results/HTName_chatgpt.csv \
             --prediction_column gpt_name
 
-        # ChatGPT on HTLocation
+        # ChatGPT on HTUnified
 
         python3 src/openai_infer.py \
-            --data ./data/HTLocation.csv \
-            --save_path ./results/HTLocation_chatgpt.csv \
+            --data ./data/HTUnified.csv \
+            --save_path ./results/HTUnified_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
 
         python3 src/evaluate.py \
-            --ground_truth ./results/HTLocation_chatgpt.csv  \
-            --ground_truth_column label \
-            --prediction ./results/HTLocation_chatgpt.csv \
+            --ground_truth ./results/HTUnified_chatgpt.csv  \
+            --ground_truth_column name \
+            --prediction ./results/HTUnified_chatgpt.csv \
             --prediction_column gpt_name
+
+        python3 src/evaluate.py \
+            --ground_truth ./results/HTUnified_chatgpt.csv  \
+            --ground_truth_column location \
+            --prediction ./results/HTUnified_chatgpt.csv \
+            --prediction_column gpt_location
 
         # Data Preprocess
 
