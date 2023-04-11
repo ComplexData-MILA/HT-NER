@@ -15,11 +15,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         PreCondition: ```export OPENAI_API_KEY='yourkey'```
         Usage: 
         ```
-        openai_gpt.py [-h] [--data DATA] [--save_path SAVE_PATH]
+        openai_infer.py [-h] [--data DATA] [--save_path SAVE_PATH]
                       [--model {gpt4,gpt3.5,davinci,D,Curie,C,Babbage,B,Ada,A}] [--prompt PROMPT]
                       [--result_column RESULT_COLUMN] [--verbose]
-        ```
-        ```
+
         optional arguments:
             -h, --help            show this help message and exit
             --data DATA           dataset-name | csv_file[have 'text' coloum]
@@ -82,28 +81,19 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         ```
         # ChatGPT on HTUnsup
 
-        python3 src/openai_gpt.py \
+        python3 src/openai_infer.py \
             --data ./data/HTUnsup.csv \
             --save_path ./results/HTUnsup_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
         
-        python3 src/process_response.py \
-            --data ./results/HTUnsup_chatgpt.csv \
-            --save_path ./results/HTUnsup_chatgpt.csv
-
-
         # ChatGPT on HTName
 
-        python3 src/openai_gpt.py \
+        python3 src/openai_infer.py \
             --data ./data/HTName.csv \
             --save_path ./data/HTName_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
-
-        python3 src/process_response.py \
-            --data ./results/HTName_chatgpt.csv \
-            --save_path ./results/HTName_chatgpt.csv
 
         python3 src/evaluate.py \
             --ground_truth ./results/HTName_chatgpt.csv  \
@@ -113,15 +103,11 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
         # ChatGPT on HTLocation
 
-        python3 src/openai_gpt.py \
+        python3 src/openai_infer.py \
             --data ./data/HTLocation.csv \
             --save_path ./results/HTLocation_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
-
-        python3 src/process_response.py \
-            --data ./results/HTLocation_chatgpt.csv \
-            --save_path ./results/HTLocation_chatgpt.csv
 
         python3 src/evaluate.py \
             --ground_truth ./results/HTLocation_chatgpt.csv  \
