@@ -130,7 +130,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --prediction_column gpt_name
 
         # Data Preprocess
-        
+
         python3 src/preprocess/human_trafficking.py
         python3 src/preprocess/few_nerd.py
         python3 src/preprocess/wikiner.py

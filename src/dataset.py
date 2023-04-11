@@ -191,8 +191,8 @@ def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs)
 
     if fold != -1:
         assert fold >= 5 or fold < -1
-        from sklearn.model_selection import StratifiedKFold
         import numpy as np
+        from sklearn.model_selection import StratifiedKFold
 
         folds = StratifiedKFold(n_splits=5)
         splits = folds.split(
@@ -290,7 +290,6 @@ def fewnerd_onlyI(root, only_l1=False):
             pd.DataFrame({"tokens": texts, "tags": tags_l1}).to_csv(
                 pj(root, file.replace(".txt", "_L1.csv")), index=False
             )
-
 
     tds = Dataset.from_pandas(
         help_load(
@@ -711,9 +710,9 @@ if __name__ == "__main__":
         loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
     )
     print(
-        loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"][
-            "tokens"
-        ][4]
+        loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
+            4
+        ]
     )
     print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
     print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])

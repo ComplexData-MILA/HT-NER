@@ -86,8 +86,6 @@ if __name__ == "__main__":
     import argparse
     import json
 
-    pd.DataFrame().drop
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str)
     parser.add_argument("--save_path", type=str)

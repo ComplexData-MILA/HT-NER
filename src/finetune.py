@@ -1,10 +1,6 @@
-import argparse, wandb, evaluate
-from ner_dataset import loadDataset
+import os, argparse, wandb, evaluate
 import numpy as np
-import os
-
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
-
+from dataset import loadDataset
 from transformers import (
     AutoModelForTokenClassification,
     TrainingArguments,
@@ -14,6 +10,7 @@ from transformers import (
     EarlyStoppingCallback,
 )
 
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
@@ -46,16 +43,6 @@ dataset_name = args.dataset
 batch_size = 100
 lr = 2e-5
 
-options = {
-    "conll2003",
-    "fewnerd",
-    "few-nerd",
-    "fewnerd-l1",
-    "few-nerd-l1",
-    "wnut2017",
-    "wikiner",
-}
-
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,
     "./data/Few-NERD" if "few" in dataset_name.lower() else "./data/wikiner-en",
@@ -64,7 +51,7 @@ datasets, label_list, label_col_name = loadDataset(
 )
 
 l2id = {x: i for i, x in enumerate(label_list)}
-id2l = {i: x for i, x in enumerate(label_list)}
+id2l = dict(enumerate(label_list))
 print(label_list)
 
 wandb.init(
@@ -75,11 +62,10 @@ wandb.init(
 tokenizer = AutoTokenizer.from_pretrained(
     model_checkpoint, use_fast=True, add_prefix_space=True
 )
-label_all_tokens = True
 padding_value = 0 if "GP" in sub_structure else -100
 
 
-def tokenize_and_align_labels(examples):
+def tokenize_and_align_labels(examples, label_all_tokens=True):
     tokenized_inputs = tokenizer(
         examples["tokens"], truncation=True, is_split_into_words=True, max_length=300
     )
@@ -182,6 +168,7 @@ args = TrainingArguments(
     load_best_model_at_end=True,
 )
 
+import torch
 from transformers import Trainer
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers.trainer import (
@@ -190,7 +177,6 @@ from transformers.trainer import (
     ALL_LAYERNORM_LAYERS,
 )
 from transformers.trainer_pt_utils import get_parameter_names
-import torch
 
 
 class NewTrainer(Trainer):
@@ -201,11 +187,9 @@ class NewTrainer(Trainer):
             if len(outputs) == 3:
                 # loss, logits, labels = outputs
                 return outputs
-            elif type(outputs) is TokenClassifierOutput:
+            if isinstance(outputs, TokenClassifierOutput):
                 return (outputs.loss, outputs.logits, inputs.get("labels", None))
-            else:
-                # loss, logits = outputs
-                return (outputs.loss, outputs.logits, None)
+            return (outputs.loss, outputs.logits, None)
 
     def create_optimizer(self):
         """
