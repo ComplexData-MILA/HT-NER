@@ -15,11 +15,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         PreCondition: ```export OPENAI_API_KEY='yourkey'```
         Usage: 
         ```
-        openai_gpt.py [-h] [--data DATA] [--save_path SAVE_PATH]
+        openai_infer.py [-h] [--data DATA] [--save_path SAVE_PATH]
                       [--model {gpt4,gpt3.5,davinci,D,Curie,C,Babbage,B,Ada,A}] [--prompt PROMPT]
                       [--result_column RESULT_COLUMN] [--verbose]
-        ```
-        ```
+
         optional arguments:
             -h, --help            show this help message and exit
             --data DATA           dataset-name | csv_file[have 'text' coloum]
@@ -39,7 +38,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --save_dir ./models
         ```
 
-    - Inference with Finetuned Model:
+    - Evaluate with Finetuned Model:
         Usage:
         ```
         python3 src/inference.py 
@@ -50,7 +49,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - Evaluate F1:
         ```
-        usage: evaluate.py [-h] [--ground_truth GROUND_TRUTH]
+        usage: metrics.py [-h] [--ground_truth GROUND_TRUTH]
                         [--ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]]
                         [--pred PRED]
                         [--prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]]
@@ -82,52 +81,45 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         ```
         # ChatGPT on HTUnsup
 
-        python3 src/openai_gpt.py \
+        python3 src/openai_infer.py \
             --data ./data/HTUnsup.csv \
             --save_path ./results/HTUnsup_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
         
-        python3 src/process_response.py \
-            --data ./results/HTUnsup_chatgpt.csv \
-            --save_path ./results/HTUnsup_chatgpt.csv
-
-
         # ChatGPT on HTName
 
-        python3 src/openai_gpt.py \
+        python3 src/openai_infer.py \
             --data ./data/HTName.csv \
             --save_path ./data/HTName_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 src/process_response.py \
-            --data ./results/HTName_chatgpt.csv \
-            --save_path ./results/HTName_chatgpt.csv
-
-        python3 src/evaluate.py \
+        python3 src/metrics.py \
             --ground_truth ./results/HTName_chatgpt.csv  \
             --ground_truth_column label \
             --prediction ./results/HTName_chatgpt.csv \
             --prediction_column gpt_name
 
-        # ChatGPT on HTLocation
+        # ChatGPT on HTUnified
 
-        python3 src/openai_gpt.py \
-            --data ./data/HTLocation.csv \
-            --save_path ./results/HTLocation_chatgpt.csv \
+        python3 src/openai_infer.py \
+            --data ./data/HTUnified.csv \
+            --save_path ./results/HTUnified_chatgpt.csv \
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 src/process_response.py \
-            --data ./results/HTLocation_chatgpt.csv \
-            --save_path ./results/HTLocation_chatgpt.csv
-
-        python3 src/evaluate.py \
-            --ground_truth ./results/HTLocation_chatgpt.csv  \
-            --ground_truth_column label \
-            --prediction ./results/HTLocation_chatgpt.csv \
+        python3 src/metrics.py \
+            --ground_truth ./results/HTUnified_chatgpt.csv  \
+            --ground_truth_column name \
+            --prediction ./results/HTUnified_chatgpt.csv \
             --prediction_column gpt_name
+
+        python3 src/metrics.py \
+            --ground_truth ./results/HTUnified_chatgpt.csv  \
+            --ground_truth_column location \
+            --prediction ./results/HTUnified_chatgpt.csv \
+            --prediction_column gpt_location
 
         # Data Preprocess
 
@@ -138,6 +130,13 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         # Verify Dataset
         python3 src/dataset.py
 
+        # Finetune DeBERTav3
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017
+        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-wnut2017/checkpoint-170 --dataset wnut2017
+
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets HTUnsup
+        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-HTUnsup/checkpoint-1540 --dataset HTUnsup # default use cuda:0
+        
         ```
 
 File Structure After Data Preprocess:

@@ -8,6 +8,16 @@ from os.path import join as pj
 # datasets = load_dataset("conll2003")
 # datasets = load_dataset("tner/wnut2017")
 
+ROOTS = {
+    "conll2003": "",
+    "wnut2017": "",
+    "fewnerd-l1": "./data/cache/Few-NERD",
+    "wikiner-en": "./data/cache/wikiner-en",
+    "HTName": "./data/cache/HT",
+    "HTUnified": "./data/cache/HT",
+    "HTUnsup": "./data/cache/HT"
+}
+
 
 def load_street_name(root="../data/oda"):
     import json
@@ -81,7 +91,7 @@ def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs)
         "htunified",
         "htunsup",
         "HTname",
-        "HTlocation",
+        "HTunsup",
         "HTunified",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
@@ -696,24 +706,25 @@ def help_load(df, f=None):
         df["tags"] = df["tags"].map(f)
     return df
 
-
 # %%
 if __name__ == "__main__":
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint
-
-    print(loadDataset("conll2003")[0]["train"]["tokens"][4])
-    print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
-
-    print(
-        loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
-    )
-    print(
-        loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
-            4
-        ]
-    )
-    print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    for k, v in ROOTS.items():
+        print(k)
+        print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
+        
+    # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
+    # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
+    # print(
+    #     loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
+    # )
+    # print(
+    #     loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
+    #         4
+    #     ]
+    # )
+    # print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    # print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
+    # print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])
