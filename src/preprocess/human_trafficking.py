@@ -19,7 +19,7 @@ def parse_name(n, default):
     return default
 
 
-def load(fn, text_cols, label_cols, default):
+def load(fn, text_cols, label_cols, default, tokenize=True):
 
     df = pd.read_csv(fn)
     df = df[text_cols + label_cols]
@@ -29,6 +29,9 @@ def load(fn, text_cols, label_cols, default):
 
     df["text"] = df["text"].apply(lambda x: x.replace("’", "'"))
     df[label_cols] = df[label_cols].apply(lambda x: x.replace("’", "'"))
+
+    if not tokenize:
+        return df[["text"] + label_cols]
 
     tokens, tags = [], []
     for i, line in df.iterrows():
@@ -177,6 +180,32 @@ def update_label_list4loc_unsup(tokenized_text, label, label_list, label_name):
                     label_list[pointer + pos] = f"I-{label_name}"
 
     return label_list
+
+
+def getHTNameRaw():
+    return load(
+        "data/HT/HTName.csv", ["title", "description"], ["label"], "NAME", False
+    )
+
+
+def getHTUnifiedRaw():
+    return load(
+        "data/HT/HTUnified.csv",
+        ["title", "description"],
+        ["location", "name"],
+        "NAME",
+        False,
+    )
+
+
+def getHTUnsupRaw():
+    return load(
+        "results/HTUnsup_chatgpt.csv",
+        ["title", "description"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+        False,
+    )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import os, argparse, wandb, evaluate
 import numpy as np
-from dataset import loadDataset
+from dataset import loadDataset, ROOTS
 from transformers import (
     AutoModelForTokenClassification,
     TrainingArguments,
@@ -11,11 +11,12 @@ from transformers import (
 )
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-model", type=str)
-parser.add_argument("--dataset", type=str)
+parser.add_argument("--datasets", nargs="+", type=str)
 parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
@@ -39,13 +40,13 @@ sub_structure += (
     else ""
 )
 
-dataset_name = args.dataset
-batch_size = 100
+dataset_name = args.datasets[0]
+batch_size = 20 if "HT" in dataset_name else 100
 lr = 2e-5
 
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,
-    "./data/Few-NERD" if "few" in dataset_name.lower() else "./data/wikiner-en",
+    ROOTS[dataset_name],
     substitude=args.substitude,
     onlyLoc=args.only_loc,
 )
@@ -55,7 +56,7 @@ id2l = dict(enumerate(label_list))
 print(label_list)
 
 wandb.init(
-    project="HT-Standard-NER-Substitude",
+    project="HT-NER-Combined",
     name=f"{model_checkpoint.split('/')[-1]}{sub_structure}-{dataset_name}",
 )
 
@@ -67,7 +68,7 @@ padding_value = 0 if "GP" in sub_structure else -100
 
 def tokenize_and_align_labels(examples, label_all_tokens=True):
     tokenized_inputs = tokenizer(
-        examples["tokens"], truncation=True, is_split_into_words=True, max_length=300
+        examples["tokens"], truncation=True, is_split_into_words=True, max_length=512
     )
 
     labels = []
@@ -103,7 +104,13 @@ from models.debertav2 import (
     DebertaV2GlobalPointerDataCollator,
 )
 
-config = AutoConfig.from_pretrained(model_checkpoint, num_labels=len(label_list))
+config = AutoConfig.from_pretrained(
+    model_checkpoint, id2label=id2l, label2id=l2id, num_labels=len(label_list)
+)
+# id2label (Dict[int, str], optional) — A map from index (for instance prediction index, or target index) to label.
+# label2id (Dict[str, int], optional) — A map from label to index for the model.
+# num_labels (int, optional) — Number of labels to use in the last layer added to the model, typically for a classification task.
+
 structure_improve = args.sub_structure.split("-")
 # only possible substructure: CRF, GP, BiL
 Deberta_ModelZoo = {
@@ -147,7 +154,7 @@ args = TrainingArguments(
     evaluation_strategy="epoch",
     # evaluation_strategy = "steps",
     # eval_steps = 200, #14041 // 2 // batch_size,
-    logging_steps=40,  # 14041 // 2 // batch_size,
+    logging_steps=50,  # 14041 // 2 // batch_size,
     learning_rate=lr,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size * 4,
@@ -278,5 +285,4 @@ trainer = NewTrainer(
     # callbacks=[EarlyStoppingCallback()]
 )
 
-# print(trainer.evaluate(tokenized_datasets["validation"]))
 trainer.train(resume_from_checkpoint=False)

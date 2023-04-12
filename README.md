@@ -38,7 +38,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --save_dir ./models
         ```
 
-    - Inference with Finetuned Model:
+    - Evaluate with Finetuned Model:
         Usage:
         ```
         python3 src/inference.py 
@@ -49,7 +49,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - Evaluate F1:
         ```
-        usage: evaluate.py [-h] [--ground_truth GROUND_TRUTH]
+        usage: metrics.py [-h] [--ground_truth GROUND_TRUTH]
                         [--ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]]
                         [--pred PRED]
                         [--prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]]
@@ -95,7 +95,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 src/evaluate.py \
+        python3 src/metrics.py \
             --ground_truth ./results/HTName_chatgpt.csv  \
             --ground_truth_column label \
             --prediction ./results/HTName_chatgpt.csv \
@@ -109,13 +109,13 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --result_column chatgpt_response \
             --model gpt3.5
 
-        python3 src/evaluate.py \
+        python3 src/metrics.py \
             --ground_truth ./results/HTUnified_chatgpt.csv  \
             --ground_truth_column name \
             --prediction ./results/HTUnified_chatgpt.csv \
             --prediction_column gpt_name
 
-        python3 src/evaluate.py \
+        python3 src/metrics.py \
             --ground_truth ./results/HTUnified_chatgpt.csv  \
             --ground_truth_column location \
             --prediction ./results/HTUnified_chatgpt.csv \
@@ -130,6 +130,13 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         # Verify Dataset
         python3 src/dataset.py
 
+        # Finetune DeBERTav3
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017
+        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-wnut2017/checkpoint-170 --dataset wnut2017
+
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets HTUnsup
+        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-HTUnsup/checkpoint-1540 --dataset HTUnsup # default use cuda:0
+        
         ```
 
 File Structure After Data Preprocess:
