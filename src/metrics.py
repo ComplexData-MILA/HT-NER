@@ -11,6 +11,7 @@ def f1(
     ground_truth_column: List[str],
     prediction_column: List[str],
     epsilon: float = 1e-7,
+    ignore_duplicates: bool = True
 ):
     # Initialize dictionaries to keep track of true positives, false positives, and false negatives
     entity_tp = {}
@@ -27,6 +28,7 @@ def f1(
         ground_truth_entities = (
             ground_truth[gt_col]
             .fillna("")
+            .replace(to_replace=r'^N$', value='', regex=True)
             .apply(lambda x: x.lower())
             .str.split("|")
             .apply(lambda x: list(y.strip() for y in x))
@@ -35,6 +37,7 @@ def f1(
         predicted_entities = (
             prediction[pred_col]
             .fillna("")
+            .replace(to_replace=r'^N$', value='', regex=True)
             .apply(lambda x: x.lower())
             .str.split("|")
             .apply(lambda x: list(y.strip() for y in x))
@@ -53,33 +56,31 @@ def f1(
         # Iterate through each row in the ground truth and prediction CSV files
         for j in range(len(ground_truth_entities)):
 
-            pred_list = predicted_entities[j]
+            pred_list = list(filter(None, predicted_entities[j]))
             pred_set = set(pred_list)
-            ground_truth_list = ground_truth_entities[j]
+            ground_truth_list = list(filter(None, ground_truth_entities[j]))
             ground_truth_set = set(ground_truth_list)
+            
+            if ignore_duplicates:
+                entity_tp[col] += len(pred_set.intersection(ground_truth_set))
+                entity_fp[col] += len(pred_set.difference(ground_truth_set))
+                entity_fn[col] += len(ground_truth_set.difference(pred_set))
+            else:
+                # Iterate through each ground truth entity in the current row
+                for entity in ground_truth_list:
+                    # If the entity is also present in the predicted entities for the current row, count it as a true positive
+                    if entity in pred_set:
+                        entity_tp[col] += 1
+                    # Otherwise, count it as a false negative
+                    else:
+                        entity_fn[col] += 1
 
-            # Iterate through each ground truth entity in the current row
-            for entity in ground_truth_list:
-                if not entity:
-                    continue
+                # Iterate through each predicted entity in the current row
+                for entity in pred_list:
+                    # If the predicted entity is not present in the ground truth entities for the current row, count it as a false positive
+                    if entity not in ground_truth_set:
+                        entity_fp[col] += 1
 
-                # If the entity is also present in the predicted entities for the current row, count it as a true positive
-                if entity in pred_set:
-                    entity_tp[col] += 1
-                # Otherwise, count it as a false negative
-                else:
-                    entity_fn[col] += 1
-
-            # Iterate through each predicted entity in the current row
-            for entity in pred_list:
-                if not entity:
-                    continue
-
-                # If the predicted entity is not present in the ground truth entities for the current row, count it as a false positive
-                if entity not in ground_truth_set:
-                    entity_fp[col] += 1
-
-            # Flatten the list of entities and predicted entities to evaluate the token-level F1 score
 
             ground_truth_tokens = []
             for row in ground_truth_list:
@@ -94,22 +95,25 @@ def f1(
             pred_set = set(predicted_tokens)
             ground_truth_set = set(ground_truth_tokens)
 
-            # Iterate through each ground truth token
-            for token in ground_truth_tokens:
+            if ignore_duplicates:
+                token_tp[col] += len(pred_set.intersection(ground_truth_set))
+                token_fp[col] += len(pred_set.difference(ground_truth_set))
+                token_fn[col] += len(ground_truth_set.difference(pred_set))
+            else:
+                # Iterate through each ground truth token
+                for token in ground_truth_tokens:
+                    # If the token is also present in the predicted tokens, count it as a true positive
+                    if token in pred_set:
+                        token_tp[col] += 1
+                    # Otherwise, count it as a false negative
+                    else:
+                        token_fn[col] += 1
 
-                # If the token is also present in the predicted tokens, count it as a true positive
-                if token in pred_set:
-                    token_tp[col] += 1
-                # Otherwise, count it as a false negative
-                else:
-                    token_fn[col] += 1
-
-            # Iterate through each predicted token
-            for token in predicted_tokens:
-
-                # If the predicted token is not present in the ground truth tokens, count it as a false positive
-                if token not in ground_truth_set:
-                    token_fp[col] += 1
+                # Iterate through each predicted token
+                for token in predicted_tokens:
+                    # If the predicted token is not present in the ground truth tokens, count it as a false positive
+                    if token not in ground_truth_set:
+                        token_fp[col] += 1
 
     # Compute precision, recall, and F1 score for each entity
     entity_precision = {}
@@ -149,10 +153,10 @@ def f1(
 
     # Create matrices to display the precision, recall, and F1 score for each entity and token
     entity_matrix = pd.DataFrame(
-        {"Precision": entity_precision, "Recall": entity_recall, "F1 Score": entity_f1}
+        {"F1 Score": entity_f1, "Precision": entity_precision, "Recall": entity_recall}
     )
     token_matrix = pd.DataFrame(
-        {"Precision": token_precision, "Recall": token_recall, "F1 Score": token_f1}
+        {"F1 Score": token_f1, "Precision": token_precision, "Recall": token_recall}
     )
 
     # Print the matrices
@@ -184,6 +188,12 @@ if __name__ == "__main__":
         nargs="+",
         help="Names of columns in prediction CSV file that contain the entities.",
     )
+    parser.add_argument(
+        "--ignore_duplicates",
+        type=int, 
+        default=1,
+        help="Whether to ignore duplicate entities in the prediction file.",
+    )
     args = parser.parse_args()
 
     # Load ground truth CSV file
@@ -192,4 +202,4 @@ if __name__ == "__main__":
     # Load prediction CSV file
     prediction = pd.read_csv(args.prediction)
 
-    f1(ground_truth, prediction, args.ground_truth_column, args.prediction_column)
+    f1(ground_truth, prediction, args.ground_truth_column, args.prediction_column, ignore_duplicates=[False, True][args.ignore_duplicates])
