@@ -33,20 +33,20 @@ def main(args):
     sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
     sub_structure += "-" + args.sub_structure
 
-    dataset_name = args.dataset
-    batch_size = 100
-    lr = 2e-5
+    dataset_name = args.datasets[0]
+    batch_size = 50
+    # lr = 2e-5
 
-    datasets, label_list, label_col_name = loadDataset(
-        dataset_name,
-        ROOTS[dataset_name],
-        onlyLoc=args.only_loc,
-        substitude=args.substitude,
-    )
-    l2id = {x: i for i, x in enumerate(label_list)}
-    id2l = {i: x for i, x in enumerate(label_list)}
-    print(label_list)
-    
+    # datasets, label_list, label_col_name = loadDataset(
+    #     dataset_name,
+    #     ROOTS[dataset_name],
+    #     onlyLoc=args.only_loc,
+    #     substitude=args.substitude,
+    # )
+    # l2id = {x: i for i, x in enumerate(label_list)}
+    # id2l = {i: x for i, x in enumerate(label_list)}
+    # print(label_list)
+
     tokenizer = AutoTokenizer.from_pretrained(
         model_checkpoint, use_fast=True, add_prefix_space=True
     )
@@ -77,7 +77,7 @@ def main(args):
     )
 
     data_collator = ModelClass[1](tokenizer)
-    data_collator.num_labels = len(label_list)
+    data_collator.num_labels = len(config.id2label) #len(label_list)
     data_collator.max_length = 512
 
     model_name = model_checkpoint.split("/")[-1]
@@ -123,7 +123,7 @@ def main(args):
 
         f1(df, df, [label_col], [pred_col])
         return df
-    
+
     # print(trainer.evaluate(tokenized_datasets["validation"]))
     from preprocess.human_trafficking import getHTNameRaw, getHTUnifiedRaw
     from transformers import pipeline, TokenClassificationPipeline
@@ -132,54 +132,26 @@ def main(args):
         model=model, tokenizer=tokenizer, task="ner", device=0
     )  # , aggregation_strategy = "simple"
     print("Evalute on HTName:")
-    evaluateHT(extractor, getHTNameRaw(), label_col="label").to_csv(f"./results/htname_{dataset_name}_deberta.csv")
+    evaluateHT(extractor, getHTNameRaw(), label_col="label").to_csv(
+        f"./results/htname_{dataset_name}_deberta.csv"
+    )
 
     print("Evalute on HTUnified:")
-    evaluateHT(extractor, getHTUnifiedRaw(), label_col="name").to_csv(f"./results/htunified_name_{dataset_name}_deberta.csv")
-    
+    evaluateHT(extractor, getHTUnifiedRaw(), label_col="name").to_csv(
+        f"./results/htunified_name_{dataset_name}_deberta.csv"
+    )
+
     print("Evalute on HTUnified:")
-    evaluateHT(extractor, getHTUnifiedRaw(), label_col="location").to_csv(f"./results/htunified_location_{dataset_name}_deberta.csv")
-    # >>> token_classifier = pipeline(model="Jean-Baptiste/camembert-ner", aggregation_strategy="simple")
-    # >>> sentence = "Je m'appelle jean-baptiste et je vis à montréal"
-    # >>> tokens = token_classifier(sentence)
-    # >>> tokens
-    # [{'entity': 'B-location',
-    # 'score': 0.42658573,
-    # 'index': 2,
-    # 'word': 'golden',
-    # 'start': 4,
-    # 'end': 10},
-    # {'entity': 'I-location',
-    # 'score': 0.35856336,
-    # 'index': 3,
-    # 'word': 'state',
-    # 'start': 11,
-    # 'end': 16},
-    # {'entity': 'B-group',
-    # 'score': 0.3064001,
-    # 'index': 4,
-    # 'word': 'warriors',
-    # 'start': 17,
-    # 'end': 25},
-    # {'entity': 'B-location',
-    # 'score': 0.65523505,
-    # 'index': 13,
-    # 'word': 'san',
-    # 'start': 80,
-    # 'end': 83},
-    # {'entity': 'B-location',
-    # 'score': 0.4668663,
-    # 'index': 14,
-    # 'word': 'francisco',
-    # 'start': 84,
-    # 'end': 93}]
+    evaluateHT(extractor, getHTUnifiedRaw(), label_col="location").to_csv(
+        f"./results/htunified_location_{dataset_name}_deberta.csv"
+    )
 
 
 if __name__ == "__main__":
     ### Receive Augmentation
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str)
-    parser.add_argument("--dataset", type=str)
+    parser.add_argument("--datasets", type=str)
     parser.add_argument("--only-loc", type=int, default=0)
     parser.add_argument("--fold", type=int, default=-1)
     parser.add_argument("--sub-structure", type=str, default="")

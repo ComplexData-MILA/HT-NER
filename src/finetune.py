@@ -41,8 +41,14 @@ sub_structure += (
 )
 
 dataset_name = args.datasets[0]
-batch_size = 20 if "HT" in dataset_name else 100
-lr = 2e-5
+if "HT" in dataset_name:
+    batch_size = 20
+elif "fewner" in dataset_name:
+    batch_size = 20
+else:
+    batch_size = 100
+    
+lr = 2e-5 / 100 * batch_size
 
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,

@@ -15,7 +15,7 @@ ROOTS = {
     "wikiner-en": "./data/cache/wikiner-en",
     "HTName": "./data/cache/HT",
     "HTUnified": "./data/cache/HT",
-    "HTUnsup": "./data/cache/HT"
+    "HTUnsup": "./data/cache/HT",
 }
 
 
@@ -706,15 +706,17 @@ def help_load(df, f=None):
         df["tags"] = df["tags"].map(f)
     return df
 
+
 # %%
 if __name__ == "__main__":
     # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
     # print(len(data))
     from pprint import pprint
+
     for k, v in ROOTS.items():
         print(k)
         print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
-        
+
     # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
     # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
     # print(

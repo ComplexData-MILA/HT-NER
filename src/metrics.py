@@ -11,7 +11,7 @@ def f1(
     ground_truth_column: List[str],
     prediction_column: List[str],
     epsilon: float = 1e-7,
-    ignore_duplicates: bool = True
+    ignore_duplicates: bool = True,
 ):
     # Initialize dictionaries to keep track of true positives, false positives, and false negatives
     entity_tp = {}
@@ -28,7 +28,7 @@ def f1(
         ground_truth_entities = (
             ground_truth[gt_col]
             .fillna("")
-            .replace(to_replace=r'^N$', value='', regex=True)
+            .replace(to_replace=r"^N$", value="", regex=True)
             .apply(lambda x: x.lower())
             .str.split("|")
             .apply(lambda x: list(y.strip() for y in x))
@@ -37,7 +37,7 @@ def f1(
         predicted_entities = (
             prediction[pred_col]
             .fillna("")
-            .replace(to_replace=r'^N$', value='', regex=True)
+            .replace(to_replace=r"^N$", value="", regex=True)
             .apply(lambda x: x.lower())
             .str.split("|")
             .apply(lambda x: list(y.strip() for y in x))
@@ -60,7 +60,7 @@ def f1(
             pred_set = set(pred_list)
             ground_truth_list = list(filter(None, ground_truth_entities[j]))
             ground_truth_set = set(ground_truth_list)
-            
+
             if ignore_duplicates:
                 entity_tp[col] += len(pred_set.intersection(ground_truth_set))
                 entity_fp[col] += len(pred_set.difference(ground_truth_set))
@@ -80,7 +80,6 @@ def f1(
                     # If the predicted entity is not present in the ground truth entities for the current row, count it as a false positive
                     if entity not in ground_truth_set:
                         entity_fp[col] += 1
-
 
             ground_truth_tokens = []
             for row in ground_truth_list:
@@ -190,7 +189,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ignore_duplicates",
-        type=int, 
+        type=int,
         default=1,
         help="Whether to ignore duplicate entities in the prediction file.",
     )
@@ -202,4 +201,10 @@ if __name__ == "__main__":
     # Load prediction CSV file
     prediction = pd.read_csv(args.prediction)
 
-    f1(ground_truth, prediction, args.ground_truth_column, args.prediction_column, ignore_duplicates=[False, True][args.ignore_duplicates])
+    f1(
+        ground_truth,
+        prediction,
+        args.ground_truth_column,
+        args.prediction_column,
+        ignore_duplicates=[False, True][args.ignore_duplicates],
+    )
