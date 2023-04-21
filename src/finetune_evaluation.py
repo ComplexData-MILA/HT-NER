@@ -33,7 +33,7 @@ def main(args):
     sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
     sub_structure += "-" + args.sub_structure
 
-    dataset_name = args.datasets[0]
+    dataset_name = args.datasets#[0]
     batch_size = 50
     # lr = 2e-5
 
@@ -93,7 +93,7 @@ def main(args):
     )
 
     from metrics import f1
-
+    from itertools import chain
     # from tqdm import tqdm
     # tqdm.pandas()
     def evaluateHT(extractor, df, text_col="text", label_col="name"):
@@ -113,9 +113,34 @@ def main(args):
         def step(row):
             text = row[text_col]
             pred = extractor(text)
-            pred = "".join(p["word"] for p in pred if p["entity"] in name_set)
-            pred = "|".join(filter(lambda x: x, pred.split("▁")))
-            return pred
+            pred = [x for x in pred if x["entity"] in name_set]
+
+            # connect tokens, if start index and next end index is the same, then connect
+            new = []
+            for i, x in enumerate(pred):
+                if i == 0:
+                    new.append(x)
+                else:
+                    if x["start"] == new[-1]["end"]:
+                        new[-1]["end"] = x["end"]
+                        new[-1]["word"] += x["word"]
+                    elif x["start"] == new[-1]["end"] + 1:
+                        new[-1]["end"] = x["end"]
+                        new[-1]["word"] += ' '+x["word"]
+                    else:
+                        new.append(x)
+            
+            return "|".join([x['word'] for x in new]) \
+                .replace("Ġ", "") \
+                .replace("▁", "")
+            
+            # # For single token entity, consider cat the previous onw
+            # spred = filter(lambda x: x.count(' ')==0, words) # single token
+            # spred = "".join(spred)
+            # spred = filter(None, spred.split("▁"))
+            # # For multi-token entity, don't consider split by space
+            # mpred = filter(lambda x: x.count(' ')>0, words) # single token
+            # return "|".join(chain(spred, mpred)).replace("Ġ", "|")
 
         df[pred_col] = df.swifter.apply(step, axis=1)
         df = df[[label_col, pred_col]]

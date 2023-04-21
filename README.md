@@ -78,7 +78,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --predition_column name location social_media -->
 
     - Full Command:
-        ```
+        ```bash
         # ChatGPT on HTUnsup
 
         python3 src/openai_infer.py \
@@ -129,15 +129,58 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
         # Verify Dataset
         python3 src/dataset.py
-
-        # Finetune DeBERTav3
-        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017
-        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-wnut2017/checkpoint-170 --dataset wnut2017
-
-        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets HTUnsup
-        python3 src/finetune_evaluation.py --base-model /home/mila/h/hao.yu/ht/HT-NER/saved_models/deberta-v3-base-HTUnsup/checkpoint-1540 --dataset HTUnsup # default use cuda:0
-        
         ```
+
+        <details>
+        <summary>*Finetune*</summary>
+        
+        Reference: https://github.com/huggingface/peft#token-classification
+        
+        ### BaseCommand
+        ```bash
+        # Finetune:
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model [model_name] --datasets wnut2017
+        CUDA_VISIBLE_DEVICES=0 python3 src/finetune.py --base-model [model_name] --datasets HTUnsup
+
+        # Evaluation:
+        python3 src/finetune_evaluation.py \
+            --base-model ./saved_models/deberta-v3-base-wnut2017/checkpoint-170 \
+            --dataset wnut2017
+        python3 src/finetune_evaluation.py \
+            --base-model ./saved_models/deberta-v3-base-HTUnsup/checkpoint-1540\
+            --dataset HTUnsup
+        ```
+
+        ### BERT Series
+        - DeBERTav3
+            ```model_name = "microsoft/deberta-v3-base"```
+        - RoBERTa
+            ```model_name = "roberta-base"```
+        - BERT
+            ```model_name = "bert-base-uncased"```
+
+        ### GPT Series
+        - GPT2
+            ```model_name = "gpt2"```
+        - BLOOM-560M
+            ```model_name = "bigscience/bloom-560m"```
+        - OPT-350M
+            ```model_name = "facebook/opt-350m"```
+
+        ### LLM with LORA
+        ```bash
+        # Change cache directory to scratch:
+        export TRANSFORMERS_CACHE=$SCRATCH
+        ```
+        - BLOOM-7B
+            ```model_name = "bigscience/bloom-7b1"```
+        - GPT-J
+            ```model_name = "EleutherAI/gpt-j-6B"```
+        - LLAMA-7B
+            ```model_name = "decapoda-research/llama-7b-hf"```
+
+        </details>
+
 
 File Structure After Data Preprocess:
 ```

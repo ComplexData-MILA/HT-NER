@@ -1,6 +1,12 @@
 import os, argparse, wandb, evaluate
 import numpy as np
 from dataset import loadDataset, ROOTS
+
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+os.environ["WANDB_SILENT"] = "true"
+os.environ["TRANSFORMERS_CACHE"] = os.getenv("SCRATCH")
+
 from transformers import (
     AutoModelForTokenClassification,
     TrainingArguments,
@@ -9,14 +15,18 @@ from transformers import (
     DataCollatorForTokenClassification,
     EarlyStoppingCallback,
 )
-
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
-os.environ["TOKENIZERS_PARALLELISM"] = "true"
+from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
+# peft_config = LoraConfig(
+#     task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1
+# )
+# model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path)
+# model = get_peft_model(model, peft_config)
+# model.print_trainable_parameters()
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
-parser.add_argument("--base-model", type=str)
-parser.add_argument("--datasets", nargs="+", type=str)
+parser.add_argument("--base-model", type=str, required=True)
+parser.add_argument("--datasets", nargs="+", type=str, required=True)
 parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
@@ -69,8 +79,10 @@ wandb.init(
 tokenizer = AutoTokenizer.from_pretrained(
     model_checkpoint, use_fast=True, add_prefix_space=True
 )
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+    print("tokenizer.pad_token is None, set to tokenizer.eos_token: {}".format(tokenizer.eos_token))
 padding_value = 0 if "GP" in sub_structure else -100
-
 
 def tokenize_and_align_labels(examples, label_all_tokens=True):
     tokenized_inputs = tokenizer(
