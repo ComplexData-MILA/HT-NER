@@ -81,18 +81,19 @@ def f1(
                     if entity not in ground_truth_set:
                         entity_fp[col] += 1
 
-            ground_truth_tokens = []
-            for row in ground_truth_list:
-                for entity in row:
-                    ground_truth_tokens.extend(tokenizer.tokenize(entity))
-
+            # After Postprocess
             predicted_tokens = []
-            for row in pred_list:
-                for entity in row:
-                    predicted_tokens.extend(tokenizer.tokenize(entity))
+            for entity in pred_list:
+                predicted_tokens.extend(tokenizer.tokenize(entity))
 
-            pred_set = set(predicted_tokens)
-            ground_truth_set = set(ground_truth_tokens)
+            ground_truth_tokens = []
+            for entity in ground_truth_list:
+                ground_truth_tokens.extend(tokenizer.tokenize(entity))
+
+            pred_list = list(filter(None, predicted_tokens))
+            pred_set = set(pred_list)
+            ground_truth_list = list(filter(None, ground_truth_tokens))
+            ground_truth_set = set(ground_truth_list)
 
             if ignore_duplicates:
                 token_tp[col] += len(pred_set.intersection(ground_truth_set))
@@ -100,7 +101,7 @@ def f1(
                 token_fn[col] += len(ground_truth_set.difference(pred_set))
             else:
                 # Iterate through each ground truth token
-                for token in ground_truth_tokens:
+                for token in ground_truth_list:
                     # If the token is also present in the predicted tokens, count it as a true positive
                     if token in pred_set:
                         token_tp[col] += 1
@@ -109,7 +110,7 @@ def f1(
                         token_fn[col] += 1
 
                 # Iterate through each predicted token
-                for token in predicted_tokens:
+                for token in pred_list:
                     # If the predicted token is not present in the ground truth tokens, count it as a false positive
                     if token not in ground_truth_set:
                         token_fp[col] += 1

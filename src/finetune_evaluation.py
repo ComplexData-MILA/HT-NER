@@ -92,7 +92,7 @@ def main(args):
         resume_from_checkpoint=args.base_model,
     )
 
-    from metrics import f1
+    from neat_metrics import f1
     from itertools import chain
     # from tqdm import tqdm
     # tqdm.pandas()
@@ -161,15 +161,15 @@ def main(args):
         f"./results/htname_{dataset_name}_deberta.csv"
     )
 
-    print("Evalute on HTUnified:")
-    evaluateHT(extractor, getHTUnifiedRaw(), label_col="name").to_csv(
-        f"./results/htunified_name_{dataset_name}_deberta.csv"
-    )
+    # print("Evalute on HTUnified:")
+    # evaluateHT(extractor, getHTUnifiedRaw(), label_col="name").to_csv(
+    #     f"./results/htunified_name_{dataset_name}_deberta.csv"
+    # )
 
-    print("Evalute on HTUnified:")
-    evaluateHT(extractor, getHTUnifiedRaw(), label_col="location").to_csv(
-        f"./results/htunified_location_{dataset_name}_deberta.csv"
-    )
+    # print("Evalute on HTUnified:")
+    # evaluateHT(extractor, getHTUnifiedRaw(), label_col="location").to_csv(
+    #     f"./results/htunified_location_{dataset_name}_deberta.csv"
+    # )
 
 
 if __name__ == "__main__":
