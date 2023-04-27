@@ -33,7 +33,7 @@ def main(args):
     sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
     sub_structure += "-" + args.sub_structure
 
-    dataset_name = args.datasets#[0]
+    dataset_name = args.datasets  # [0]
     batch_size = 50
     # lr = 2e-5
 
@@ -77,10 +77,10 @@ def main(args):
     )
 
     data_collator = ModelClass[1](tokenizer)
-    data_collator.num_labels = len(config.id2label) #len(label_list)
+    data_collator.num_labels = len(config.id2label)  # len(label_list)
     data_collator.max_length = 512
 
-    model_name = model_checkpoint.split("/")[-1]
+    model_name = model_checkpoint.split("/")[-2]
     args = TrainingArguments(
         output_dir="./saved_models/",  # +f"{model_checkpoint.split('/')[-1]}-{dataset_name}",
         overwrite_output_dir=False,
@@ -94,15 +94,16 @@ def main(args):
 
     from neat_metrics import f1
     from itertools import chain
+
     # from tqdm import tqdm
     # tqdm.pandas()
     def evaluateHT(extractor, df, text_col="text", label_col="name"):
         assert label_col in df.columns
         pred_col = "pred"
         target_entity_map = {
-            "name": ["PER", "NAME", "person"],
-            "label": ["PER", "NAME", "person"],
-            "location": ["LOC", "building", "location"],
+            "name": ["PER", "NAME", "person", "PERSON"],
+            "label": ["PER", "NAME", "person", "PERSON"],
+            "location": ["LOC", "building", "location", "GPE"],
         }
         name_set = target_entity_map[label_col]
         name_set = set(
@@ -126,14 +127,12 @@ def main(args):
                         new[-1]["word"] += x["word"]
                     elif x["start"] == new[-1]["end"] + 1:
                         new[-1]["end"] = x["end"]
-                        new[-1]["word"] += ' '+x["word"]
+                        new[-1]["word"] += " " + x["word"]
                     else:
                         new.append(x)
-            
-            return "|".join([x['word'] for x in new]) \
-                .replace("Ġ", "") \
-                .replace("▁", "")
-            
+
+            return "|".join([x["word"] for x in new]).replace("Ġ", "").replace("▁", "")
+
             # # For single token entity, consider cat the previous onw
             # spred = filter(lambda x: x.count(' ')==0, words) # single token
             # spred = "".join(spred)
@@ -157,19 +156,20 @@ def main(args):
         model=model, tokenizer=tokenizer, task="ner", device=0
     )  # , aggregation_strategy = "simple"
     print("Evalute on HTName:")
-    evaluateHT(extractor, getHTNameRaw(), label_col="label").to_csv(
-        f"./results/htname_{dataset_name}_deberta.csv"
-    )
+    HTUName = evaluateHT(extractor, getHTNameRaw(), label_col="label")
+    HTULocation = evaluateHT(extractor, getHTNameRaw(), label_col="label")
 
-    # print("Evalute on HTUnified:")
-    # evaluateHT(extractor, getHTUnifiedRaw(), label_col="name").to_csv(
-    #     f"./results/htunified_name_{dataset_name}_deberta.csv"
-    # )
+    HTUName.rename(columns={"pred": "name"}, inplace=True)
+    HTUName["location"] = HTULocation["pred"]
+    HTUName.to_csv(f"./results/finetune/HTName_{model_name}.csv")
 
-    # print("Evalute on HTUnified:")
-    # evaluateHT(extractor, getHTUnifiedRaw(), label_col="location").to_csv(
-    #     f"./results/htunified_location_{dataset_name}_deberta.csv"
-    # )
+    print("Evalute on HTUnified:")
+    HTUName = evaluateHT(extractor, getHTUnifiedRaw(), label_col="name")
+    HTULocation = evaluateHT(extractor, getHTUnifiedRaw(), label_col="location")
+
+    HTUName.rename(columns={"pred": "name"}, inplace=True)
+    HTUName["location"] = HTULocation["pred"]
+    HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv")
 
 
 if __name__ == "__main__":

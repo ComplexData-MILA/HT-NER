@@ -16,6 +16,7 @@ from transformers import (
     EarlyStoppingCallback,
 )
 from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
+
 # peft_config = LoraConfig(
 #     task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1
 # )
@@ -31,16 +32,10 @@ parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
 parser.add_argument("--substitude", type=int, default=0)
+parser.add_argument("--local_rank", type=int, default=-1)
 args = parser.parse_args()
 
 model_checkpoint = args.base_model
-# "microsoft/deberta-v3-base"
-# model_checkpoint = "Jean-Baptiste/camembert-ner"
-# model_checkpoint = "roberta-base"
-# model_checkpoint = "nghuyong/ernie-2.0-base-en"
-# model_checkpoint = "distilbert-base-uncased"
-# model_checkpoint = "Jean-Baptiste/camembert-ner"
-
 sub_structure = ""
 sub_structure += "-LOC" if args.only_loc else ""
 sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
@@ -52,13 +47,17 @@ sub_structure += (
 
 dataset_name = args.datasets[0]
 if "HT" in dataset_name:
-    batch_size = 20
+    batch_size = 32
 elif "fewner" in dataset_name:
-    batch_size = 20
+    batch_size = 32
+elif "polyglot" in dataset_name:
+    batch_size = 64
+elif "ontonotes5" in dataset_name:
+    batch_size = 32
 else:
-    batch_size = 100
-    
-lr = 2e-5 / 100 * batch_size
+    batch_size = 128
+
+lr = 2e-5 / 128 * batch_size
 
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,
@@ -81,8 +80,13 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
-    print("tokenizer.pad_token is None, set to tokenizer.eos_token: {}".format(tokenizer.eos_token))
+    print(
+        "tokenizer.pad_token is None, set to tokenizer.eos_token: {}".format(
+            tokenizer.eos_token
+        )
+    )
 padding_value = 0 if "GP" in sub_structure else -100
+
 
 def tokenize_and_align_labels(examples, label_all_tokens=True):
     tokenized_inputs = tokenizer(
@@ -111,6 +115,7 @@ def tokenize_and_align_labels(examples, label_all_tokens=True):
 
 
 tokenized_datasets = datasets.map(tokenize_and_align_labels, batched=True)
+do_eval = "validation" in tokenized_datasets
 
 from models.debertav2 import (
     DebertaV2CRF,
@@ -169,7 +174,7 @@ args = TrainingArguments(
     + f"{model_checkpoint.split('/')[-1]}{sub_structure}-{dataset_name}",
     overwrite_output_dir=True,
     seed=57706989,
-    evaluation_strategy="epoch",
+    evaluation_strategy="epoch" if do_eval else "no",
     # evaluation_strategy = "steps",
     # eval_steps = 200, #14041 // 2 // batch_size,
     logging_steps=50,  # 14041 // 2 // batch_size,
@@ -188,9 +193,10 @@ args = TrainingArguments(
     lr_scheduler_type="cosine",
     dataloader_num_workers=5 if "GP" not in structure_improve else 0,
     dataloader_pin_memory="GP" not in structure_improve,
-    metric_for_best_model="eval_f1",
-    greater_is_better=True,
-    load_best_model_at_end=True,
+    # metric_for_best_model="eval_f1",
+    # greater_is_better=True,
+    # load_best_model_at_end=True,
+    local_rank=args.local_rank,
 )
 
 import torch
@@ -296,7 +302,7 @@ trainer = NewTrainer(
     model,
     args,
     train_dataset=tokenized_datasets["train"],
-    eval_dataset=tokenized_datasets["validation"],
+    eval_dataset=tokenized_datasets["validation"] if do_eval else None,
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,

@@ -1,9 +1,11 @@
 # %%
 from functools import partial
-from datasets import load_dataset, load_metric, Dataset, DatasetDict
+from datasets import load_dataset, Dataset, DatasetDict
 import pandas as pd
 import os
 from os.path import join as pj
+
+cache_path = os.getenv("SCRATCH")
 
 # datasets = load_dataset("conll2003")
 # datasets = load_dataset("tner/wnut2017")
@@ -11,6 +13,8 @@ from os.path import join as pj
 ROOTS = {
     "conll2003": "",
     "wnut2017": "",
+    "polyglot_ner": "",
+    "ontonotes5": "",
     "fewnerd-l1": "./data/cache/Few-NERD",
     "wikiner-en": "./data/cache/wikiner-en",
     "HTName": "./data/cache/HT",
@@ -38,6 +42,8 @@ def load_street_name(root="../data/oda"):
 def _loadWrapper(ds_name, root, kargs):
     if ds_name in ["conll2003", "conll-2003"]:
         return conll2003()
+    elif ds_name in ["conllpp"]:
+        return conllpp()
     elif ds_name in ["wnut2017"]:
         return wnut2017()
     elif ds_name in ["fewnerd", "few-nerd"]:
@@ -64,6 +70,12 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
         assert root, "HT dataset need root path"
         return ht_unsup(root, kargs)
+    elif ds_name in ["polyglot_ner"]:
+        return polyglot_ner()
+    elif ds_name in ["ontonotes5"]:
+        return ontonotes5()
+    elif ds_name in ["all"]:
+        return unioned_datasets(root, kargs)
     else:
         assert False, "Error, Please check names of datasets!"
 
@@ -93,6 +105,9 @@ def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs)
         "HTname",
         "HTunsup",
         "HTunified",
+        "polyglot_ner",
+        "ontonotes5",
+        "all",
     ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
     # postLoadDataset(ds, label_list, label_col_name)
@@ -660,6 +675,114 @@ def ht_unsup(root, kargs):
     return datasets, label_list, "tags"
 
 
+def polyglot_ner():
+    ds = load_dataset("polyglot_ner", "en", cache_dir=cache_path)  # , split='train'
+    raw_label_list = [
+        "O",
+        "PER",
+        "ORG",
+        "LOC",
+    ]
+    ds = ds["train"].map(lambda x: {"ner": x["ner"], "words": toBIO(x["words"])})
+    label_list = [
+        "O",
+        "B-PER",
+        "B-ORG",
+        "B-LOC",
+        "I-PER",
+        "I-ORG",
+        "I-LOC",
+    ]
+    ds = ds.rename_columns({"ner": "tags", "words": "tokens"})
+    return ds, label_list, "tags"
+
+
+def xtreme():
+    ds = load_dataset("xtreme", "PEN-X.en", cache_dir=cache_path)  # , split='train'
+    label_list = []
+    raise NotImplementedError
+
+
+def conllpp():
+    ds = load_dataset("conllpp", cache_dir=cache_path)  # , split='train'
+    label_list = [
+        "O",
+        "B-PER",
+        "I-PER",
+        "B-ORG",
+        "I-ORG",
+        "B-LOC",
+        "I-LOC",
+        "B-MISC",
+        "I-MISC",
+    ]
+    return ds, label_list, "ner_tags"
+
+
+def ontonotes5():
+    ds = load_dataset("tner/ontonotes5", cache_dir=cache_path)  # , split='train'
+    label_list = [
+        "O",
+        "B-CARDINAL",
+        "B-DATE",
+        "I-DATE",
+        "B-PERSON",
+        "I-PERSON",
+        "B-NORP",
+        "B-GPE",
+        "I-GPE",
+        "B-LAW",
+        "I-LAW",
+        "B-ORG",
+        "I-ORG",
+        "B-PERCENT",
+        "I-PERCENT",
+        "B-ORDINAL",
+        "B-MONEY",
+        "I-MONEY",
+        "B-WORK_OF_ART",
+        "I-WORK_OF_ART",
+        "B-FAC",
+        "B-TIME",
+        "I-CARDINAL",
+        "B-LOC",
+        "B-QUANTITY",
+        "I-QUANTITY",
+        "I-NORP",
+        "I-LOC",
+        "B-PRODUCT",
+        "I-TIME",
+        "B-EVENT",
+        "I-EVENT",
+        "I-FAC",
+        "B-LANGUAGE",
+        "I-PRODUCT",
+        "I-ORDINAL",
+        "I-LANGUAGE",
+    ]
+    return ds, label_list, "tags"
+
+
+def unioned_datasets(root, kargs):
+    dataset_dict = {
+        "polyglot_ner": [["en"], [], ["PER", "LOC"]],
+        "xtreme": [["PEN-X.en"], ["train", "valid", "test"], ["PER", "LOC"]],
+        "conllpp": [
+            "",
+            ["train", "valid", "test"],
+            ["PER", "LOC"],
+        ],  # subsitute for conll2003
+        # 'wino_bisa':[[ type1_pro, type1_anti, type2_pro and type2_anti...], ['train', 'valid', 'test'], ['PER', 'LOC']], 792*4
+        "xglue": [["ner"], ["train", "validation.en", "test.en"], ["PER", "LOC"]],
+        "wnut2017": [[], ["train", "valid", "test"], ["PER", "LOC"]],
+        "conll2012_ontonotesv5": [
+            ["english_v12"],
+            ["train", "valid", "test"],
+            ["PER", ["LOC", "GPE"]],
+        ],
+    }
+
+
 # utils function
 from ast import literal_eval
 
@@ -715,6 +838,7 @@ if __name__ == "__main__":
 
     for k, v in ROOTS.items():
         print(k)
+        print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
         print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
 
     # print(loadDataset("conll2003")[0]["train"]["tokens"][4])

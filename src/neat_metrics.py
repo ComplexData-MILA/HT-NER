@@ -6,20 +6,23 @@ import copy
 
 SPLIT_INTO_WORDS = True
 
+
 def apply_lit(input):
-    if input == 'set()':
+    if input == "set()":
         return set()
     else:
         try:
             return set(ast.literal_eval(input))
         except:
             # TJBatch extractor results need to be split using the ; delimiter
-            return set(input.split(';'))
+            return set(input.split(";"))
+
 
 def apply_lower(input):
     return set([x.lower() for x in list(input)])
 
-def Containment_IoU(input1, input2): # pred, true
+
+def Containment_IoU(input1, input2):  # pred, true
     # input1, input2 are names in one record
     intersect_count = 0
     union_count = 0
@@ -32,7 +35,7 @@ def Containment_IoU(input1, input2): # pred, true
         remain1.remove(i)
         for j in remain1:
             if i in j:
-                try: 
+                try:
                     input1.remove(i)
                 except:
                     continue
@@ -41,31 +44,32 @@ def Containment_IoU(input1, input2): # pred, true
         remain2.remove(i)
         for j in remain2:
             if i in j:
-                try: 
+                try:
                     input2.remove(i)
                 except:
                     continue
 
     for i in input1:
         union_count += 1
-        if ~(' ' in i):
+        if ~(" " in i):
             for j in input2:
                 if (i in j) or (j in i):
                     intersect_count += 1
                     input2.remove(j)
         else:
-            for s in i.split(' '):
+            for s in i.split(" "):
                 for j in input2:
                     if (i in j) or (j in i):
                         intersect_count += 1
                         input2.remove(j)
 
     union_count += len(input2)
-    
+
     mod_IoU = intersect_count / union_count if union_count > 0 else 1
     return mod_IoU
 
-def Exact_Set(input1, input2): # pred, true
+
+def Exact_Set(input1, input2):  # pred, true
     input1 = set(input1)
     input2 = set(input2)
 
@@ -73,6 +77,7 @@ def Exact_Set(input1, input2): # pred, true
         return 1
     else:
         return 0
+
 
 def Exact_F1(pred, true):
     if SPLIT_INTO_WORDS:
@@ -82,7 +87,7 @@ def Exact_F1(pred, true):
     else:
         pred = set([x.lower().strip() for x in pred])
         true = set([t.lower().strip() for t in true])
-        
+
     tp = 0
     fp = 0
     fn = 0
@@ -91,21 +96,22 @@ def Exact_F1(pred, true):
         if i in true:
             tp += 1
         else:
-        #   print('FP:', repr(i), end=' ')
+            #   print('FP:', repr(i), end=' ')
             fp += 1
     for i in true:
         if i not in pred:
-        #   print('FN:', repr(i), end=' ')
+            #   print('FN:', repr(i), end=' ')
             fn += 1
     #   if fp!=0 or fn!=0: print()
     return tp, fp, fn
-    
+
+
 def Partial_F1(pred, true):
     # pred = set(pred)
     pred = [p.split() for p in pred]
     pred = set([y.lower() for x in pred for y in x])
     true = set(true)
-    
+
     tp = 0
     fp = 0
     fn = 0
@@ -130,7 +136,8 @@ def Partial_F1(pred, true):
             fn += 1
 
     return tp, fp, fn
-    
+
+
 def check_empty(input1, input2):
     input1 = set(input1)
     input2 = set(input2)
@@ -139,6 +146,7 @@ def check_empty(input1, input2):
         return True
     else:
         return False
+
 
 def ad_level(pred, true):
     if SPLIT_INTO_WORDS:
@@ -152,20 +160,20 @@ def ad_level(pred, true):
     # fn if true is not empty but pred is empty
     if true and not pred:
         # print('FN', pred, true)
-        return 0,0,1
-    
+        return 0, 0, 1
+
     # TN
     if not true and not pred:
-        return 0,0,0
+        return 0, 0, 0
 
     # compute IOU
-    iou = len(pred&true) / len(pred|true)
-    if iou>=0.5:
+    iou = len(pred & true) / len(pred | true)
+    if iou >= 0.5:
         # print('TP', pred, true)
-        return 1,0,0
+        return 1, 0, 0
     else:
         # print('FP', pred, true)
-        return 0,1,0
+        return 0, 1, 0
 
     # return tp, fp, fn
 
@@ -177,6 +185,7 @@ Partial_F1 = np.vectorize(Partial_F1)
 check_empty = np.vectorize(check_empty)
 ad_level = np.vectorize(ad_level)
 
+
 def f1(
     ground_truth: pd.DataFrame,
     prediction: pd.DataFrame,
@@ -185,14 +194,14 @@ def f1(
     epsilon: float = 1e-7,
     ignore_duplicates: bool = True,
 ):
-    ### modified 
+    ### modified
     def apply_lit(x):
         return set(filter(None, (y.strip() for y in x)))
-    
-    
+
+    results = []
     for pc, tc in zip(prediction_column, ground_truth_column):
-        print(pc, end='\t')
-        
+        print(pc, end="\t")
+
         true_col = (
             ground_truth[tc]
             .fillna("")
@@ -209,23 +218,31 @@ def f1(
             .str.split("|")
             .apply(lambda x: set(filter(None, (y.strip() for y in x))))
         )
-        
+
         comparison = Exact_F1(pred_col, true_col)
         tp = np.sum(comparison[0])
         fp = np.sum(comparison[1])
         fn = np.sum(comparison[2])
-        
+
         avg_precision = tp / (tp + fp)
         avg_recall = tp / (tp + fn)
-        avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
+        avg_f1 = 2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
         # print('Individual strict match F1:', np.mean(avg_f1))
         # print('Individual strict match precision:', np.mean(avg_precision))
         # print('Individual strict match recall:', np.mean(avg_recall))
-        print(f'{np.mean(avg_f1) :.6f}\t{np.mean(avg_precision) :.6f}\t{np.mean(avg_recall) :.6f}')
-        
-if __name__ == '__main__':
+        print(
+            f"{np.mean(avg_f1) :.6f}\t{np.mean(avg_precision) :.6f}\t{np.mean(avg_recall) :.6f}"
+        )
+        results.append(
+            [pc, np.mean(avg_f1), np.mean(avg_precision), np.mean(avg_recall)]
+        )
+    return results
+
+
+if __name__ == "__main__":
 
     import argparse
+
     parser = argparse.ArgumentParser(
         description="Evaluate F1 score for each column in entity and token levels."
     )
