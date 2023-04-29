@@ -10,3 +10,5 @@ tmp_*.pkl
 results/**/*
 analysis.ipynb
 saved_models
+ht_skweak/src
+ht_skweak/ht_bert_v3
