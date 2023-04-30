@@ -24,6 +24,7 @@ dictionary_path = "src/weights.json"
 expanded_dictionary_path = "/src/generatedFemaleNamesPlusOriginalDict30000 (1).json"
 
 model_path = "ht_bert_v3"
+annotated_doc_output_path = "src/annotated_doc.spacy"
 
 def main(args):
 
@@ -34,12 +35,19 @@ def main(args):
 
     # read csv dataset
     text_df = pd.read_csv(args.dataset_path)
+    
+    # grab title and description column and change into list of text
     titles = list(text_df['title'])
     descs = list(text_df['description'])
+
+    # combine title and description into a single string
     text = []
     for i in range(len(titles)):
         text.append(titles[i] + " - " + descs[i])
+
+    # preprocess text using NEAT's preprocess code
     text = list(map(preprocess, text))
+
     # create docs
     data_docs = create_doc(text, nlp)
 
@@ -48,17 +56,26 @@ def main(args):
     # create lf
     lfs = []
 
-    # add lf you want to run into lfs list above. See example below
+    # add lf you want to run into lfs list above. All available LFs are in labeling_functions.py 
+    # Below is an example of how to add them:
+
     # 0 - don't use, 1 - use, 2 - threshold (if applicable)
-    rule = 1
-    dictionary = 1
-    exp_dictionary = 0
-    disambiguation = 0
-    cap_disambiguation = 0
-    frequency = 1
-    all_caps = 0
-    name_structure = 1
-    spacy_anti = 1
+    # NEAT Rules
+    rule = 0       
+    # NEAT Weighted/Unweighted dictionary, depending on dictionary given in path             
+    dictionary = 0         
+    # Same as above, but using expanded_dictionary_path   
+    exp_dictionary = 0     
+    # NEAT Name Extractor using dictionary specified in dictionary_path    
+    disambiguation = 1      
+    # Antirule: Most frequent words at a given threshold is set as "NOT_NAME"    
+    frequency = 0  
+    # All caps word is set "PERSON_NAME"             
+    all_caps = 0       
+    # Words in the middle of a sentence that have capital first letter are set as "PERSON_NAME"         
+    name_structure = 0        
+    # All spacy model entities that are not labeled "PERSON" is set as "NOT_NAME"
+    spacy_anti = 0
 
     if rule == 1:
         for i in range(27):
@@ -88,7 +105,6 @@ def main(args):
     # Extra Rule LFs
 
     if frequency > 1:
-    # all tokens that arent stop words or punctuations
         words = []
         for doc in tqdm(data_docs):  # for doc in data we want to fit hmm on
             words = words + [token.text for token in doc if not token.is_stop and not token.is_punct]
@@ -133,30 +149,34 @@ def main(args):
     for doc in tqdm(data_docs):
         unified_docs.append(unified_model(doc))
 
+    # doc.spans is a dictionary where key = LF name, value = LF results.
+    # keep the aggregated results of hmm only.
     for doc in unified_docs:
         doc.ents = doc.spans["hmm"]     
 
-    store_doc_list(unified_docs, "src/SampleAnnotated.spacy")
+    # Store annotated (LF labeled) spacy doc at given path
+    store_doc_list(unified_docs, annotated_doc_output_path)
 
     # 5. Spacy docs ->  "Results" column in a df
     hmm_preds = []  # list of results
     for doc in unified_docs:
         entities = ''
         for ent in doc.ents:
+            # Antirules produce "NOT_NAME" labels. Grab "PERSON_NAME" entities only
             if ent.label_ == "PERSON_NAME":
                 entities+=ent.text+"|"
         if entities != '':
+            # Found "PERSON_NAME" entities, append
             hmm_preds.append(entities)
         else:
+            # No "PERSON_NAME" entities, represent using 'N'
             hmm_preds.append('N')   
-
-    print("HMM PREDS:", hmm_preds)
 
     res_df = pd.DataFrame({args.experiment_name + " results": hmm_preds})
     res_df.to_csv(args.results_path, index=False)
 
 if __name__ == "__main__":
-    ### Receive Augmentation
+    ### Receive Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_path", type=str)
     parser.add_argument("--results_path", type=str)
