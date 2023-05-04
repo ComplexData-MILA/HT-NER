@@ -176,11 +176,11 @@ def main(args):
 
     print("Evalute on HTName:")
     HTUName = evaluateHT(extractor, getHTNameRaw(), label_col="label")
-    HTULocation = evaluateHT(extractor, getHTNameRaw(), label_col="label")
+    # HTULocation = evaluateHT(extractor, getHTNameRaw(), label_col="location")
 
     HTUName.rename(columns={"pred": "name"}, inplace=True)
-    HTUName["location"] = HTULocation["pred"]
-    HTUName.to_csv(f"./results/finetune/HTName_{model_name}.csv")
+    # HTUName["location"] = HTULocation["pred"]
+    HTUName.to_csv(f"./results/finetune/HTName_{model_name}.csv", index=False)
 
     print("Evalute on HTUnified:")
     HTUName = evaluateHT(extractor, getHTUnifiedRaw(), label_col="name")
@@ -188,7 +188,7 @@ def main(args):
 
     HTUName.rename(columns={"pred": "name"}, inplace=True)
     HTUName["location"] = HTULocation["pred"]
-    HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv")
+    HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv", index=False)
 
 
 if __name__ == "__main__":
