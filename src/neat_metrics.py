@@ -7,21 +7,6 @@ import copy
 SPLIT_INTO_WORDS = True
 
 
-def apply_lit(input):
-    if input == "set()":
-        return set()
-    else:
-        try:
-            return set(ast.literal_eval(input))
-        except:
-            # TJBatch extractor results need to be split using the ; delimiter
-            return set(input.split(";"))
-
-
-def apply_lower(input):
-    return set([x.lower() for x in list(input)])
-
-
 def Containment_IoU(input1, input2):  # pred, true
     # input1, input2 are names in one record
     intersect_count = 0
