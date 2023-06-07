@@ -20,6 +20,7 @@ ROOTS = {
     "HTName": "./data/cache/HT",
     "HTUnified": "./data/cache/HT",
     "HTUnsup": "./data/cache/HT",
+    "HTGen": "./data/cache/HT",
 }
 
 
@@ -70,6 +71,9 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
         assert root, "HT dataset need root path"
         return ht_unsup(root, kargs)
+    elif ds_name in ["HTGen", "HTgen", "htgen"]:
+        assert root, "HT dataset need root path"
+        return ht_gen(root, kargs)
     elif ds_name in ["polyglot_ner"]:
         return polyglot_ner()
     elif ds_name in ["ontonotes5"]:
@@ -84,31 +88,6 @@ def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs)
     print("Loading Dataset: ", ds_name)
     # by default, num of folds = 5, if fold == -1, not fold, otherwise, fold/5 th fold
     ds_name = ds_name.lower()
-    assert ds_name in [
-        "conll2003",
-        "fewnerd",
-        "few-nerd",
-        "fewnerd-l1",
-        "few-nerd-l1",
-        "fewnerd-l1-onlyi",
-        "few-nerd-l1-onlyi",
-        "wnut2017",
-        "wikiner",
-        "wikiner-en",
-        "wikineren",
-        "HTName",
-        "HTUnified",
-        "HTUnsup",
-        "htname",
-        "htunified",
-        "htunsup",
-        "HTname",
-        "HTunsup",
-        "HTunified",
-        "polyglot_ner",
-        "ontonotes5",
-        "all",
-    ]
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
     # postLoadDataset(ds, label_list, label_col_name)
     # only LOC
@@ -587,15 +566,18 @@ def wikiner(root, language="en"):
 
     # pd.DataFrame({'text': texts, 'tag': tags})
     full_df = help_load(pd.read_csv(pj(root, "aij-wikiner-en-wp2.csv")), toBIO)
-    ratio = [0.9, 0.1]
+    ratio = [0.8, 0.1, 0.1]
     # ratio = {'train':int(0.8*full_ds), 'valid':0.1, 'test':0.1}
     tds = Dataset.from_pandas(full_df.iloc[0 : int(ratio[0] * len(full_df))])
-    vds = Dataset.from_pandas(full_df.iloc[int(ratio[0] * len(full_df)) :])
+    vds = Dataset.from_pandas(
+        full_df.iloc[int(ratio[0] * len(full_df)) : int((ratio[0]+ratio[1]) * len(full_df)) ])
+    testds = Dataset.from_pandas(full_df.iloc[int((ratio[0]+ratio[1]) * len(full_df)) :])
 
     datasets = DatasetDict()
 
     datasets["train"] = tds
     datasets["validation"] = vds
+    datasets["test"] = testds
 
     label_list = [
         "O",
@@ -609,7 +591,7 @@ def wikiner(root, language="en"):
         "I-MISC",
     ]
     # label_list = ['O', 'I-ORG', 'I-LOC', 'I-PER', 'I-MISC']
-
+    # datasets = datasets.filter(lambda example: "B-PER" in example["tags"] or "I-PER" in example["tags"])
     return datasets, label_list, "tags"
 
 
@@ -675,15 +657,31 @@ def ht_unsup(root, kargs):
     return datasets, label_list, "tags"
 
 
+def ht_gen(root, kargs):
+    import pandas as pd
+    
+    full_df = help_load(pd.read_csv(pj(root, "HTGen_tokenized.csv")))
+    tds = vds = Dataset.from_pandas(full_df)
+    datasets = DatasetDict()
+    datasets["train"] = tds
+    datasets["validation"] = vds
+    label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
+    return datasets, label_list, "tags"
+
+
 def polyglot_ner():
     ds = load_dataset("polyglot_ner", "en", cache_dir=cache_path)  # , split='train'
+    ds = ds.filter(lambda x: "PER" in x["ner"])
     raw_label_list = [
         "O",
         "PER",
         "ORG",
         "LOC",
     ]
-    ds = ds["train"].map(lambda x: {"ner": x["ner"], "words": toBIO(x["words"])})
+    # print(ds['train'][0])
+    # ds = ds.rename_columns({"ner": "tags", "words": "tokens"})
+    # return ds, raw_label_list, "tags"
+    ds = ds.map(lambda x: {"ner": toBIO(x["ner"]), "words": x["words"]})
     label_list = [
         "O",
         "B-PER",
@@ -721,13 +719,14 @@ def conllpp():
 
 def ontonotes5():
     ds = load_dataset("tner/ontonotes5", cache_dir=cache_path)  # , split='train'
+    ds = ds.filter(lambda x: 4 in x["tags"] or 5 in x["tags"])
     label_list = [
         "O",
         "B-CARDINAL",
         "B-DATE",
         "I-DATE",
-        "B-PERSON",
-        "I-PERSON",
+        "B-PERSON", # 4
+        "I-PERSON", # 5
         "B-NORP",
         "B-GPE",
         "I-GPE",
@@ -760,6 +759,7 @@ def ontonotes5():
         "I-ORDINAL",
         "I-LANGUAGE",
     ]
+    print(ds["train"][0])
     return ds, label_list, "tags"
 
 
@@ -838,9 +838,11 @@ if __name__ == "__main__":
 
     for k, v in ROOTS.items():
         print(k)
-        print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
-        print(loadDataset(k, root=v)[0]["train"]["tokens"][4])
-
+        ds = loadDataset(k, root=v)[0]
+        print(ds)
+        #try:
+        #    print(ds["test"])
+        #except: print(df['validation'])
     # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
     # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
     # print(

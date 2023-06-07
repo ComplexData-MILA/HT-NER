@@ -8,7 +8,7 @@ os.makedirs(cache_path, exist_ok=True)
 delEmpty = lambda x: [] if all(not y for y in x) else x
 tokenizer = RegexpTokenizer(r"[/|(|)|{|}|$|?|!]|\w+|\$[\d\.]+|\S+")
 name_tokenizer = RegexpTokenizer(r"\w+")
-location_tokenizer = RegexpTokenizer(r"\w+|\$[\d\.]+")
+location_tokenizer = RegexpTokenizer(r"\w+|\$[\d\.|-]+|\d+")
 
 
 def parse_name(n, default):
@@ -110,14 +110,18 @@ def update_label_list4loc(tokenized_text, label, label_list, label_name):
 
     for tag_single in label_splited:
         for ind, ttag in enumerate(location_tokenizer.tokenize(tag_single)):
-            s = tmp_token.index(ttag)
-            if ind == 0:
-                label_list[pointer + s] = f"B-{label_name}"
-            else:
-                label_list[pointer + s] = f"I-{label_name}"
-            pointer += s
-            tmp_token = tmp_token[s:]
-
+            try:
+                s = tmp_token.index(ttag)
+                if ind == 0:
+                    label_list[pointer + s] = f"B-{label_name}"
+                else:
+                    label_list[pointer + s] = f"I-{label_name}"
+                pointer += s
+                tmp_token = tmp_token[s:]
+            except:
+                # print(tmp_token)
+                print(ttag)
+                
     return label_list
 
 
@@ -208,6 +212,15 @@ def getHTUnsupRaw():
     )
 
 
+def getHTGenpRaw():
+    return load(
+        "results/HTGen_chatgpt.csv",
+        ["description"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+        False,
+    )
+
 if __name__ == "__main__":
     # Name
     df = load(
@@ -239,3 +252,13 @@ if __name__ == "__main__":
     # name: 9 miss matched
 
     df.to_csv(pj(cache_path, "HTUnsup_tokenized.csv"), index=False)
+
+    # Gen
+    df = load(
+        "results/HTGen_chatgpt.csv",
+        ["description"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+    )
+    
+    df.to_csv(pj(cache_path, "HTGen_tokenized.csv"), index=False)

@@ -51,7 +51,7 @@ if "HT" in dataset_name:
 elif "fewner" in dataset_name:
     batch_size = 32
 elif "polyglot" in dataset_name:
-    batch_size = 64
+    batch_size = 32
 elif "ontonotes5" in dataset_name:
     batch_size = 32
 else:
@@ -191,7 +191,7 @@ args = TrainingArguments(
     # save_total_limit = 10
     optim="adamw_torch",
     lr_scheduler_type="cosine",
-    dataloader_num_workers=5 if "GP" not in structure_improve else 0,
+    dataloader_num_workers=3 if "GP" not in structure_improve else 0,
     dataloader_pin_memory="GP" not in structure_improve,
     # metric_for_best_model="eval_f1",
     # greater_is_better=True,

@@ -121,7 +121,7 @@ def main(args):
             substitude=0,
             onlyLoc=0,
         )
-        df = datasets["validation"].to_pandas()
+        df = datasets["test"].to_pandas()
 
         target_entity_map = {
             "name": ["PER", "NAME", "person", "PERSON"],
@@ -190,6 +190,15 @@ def main(args):
         f"./results/finetune2/wnut2017_{model_name}.csv"
     )
 
+    print("Evalute on wikiner:")
+    evaluateGeneral(extractor, "wikiner-en").to_csv(
+        f"./results/finetune2/wikiner_{model_name}.csv"
+    )
+
+    print("Evalute on fewnerd:")
+    evaluateGeneral(extractor, "fewnerd-l1").to_csv(
+        f"./results/finetune2/fewnerdl1_{model_name}.csv"
+    )
 
 if __name__ == "__main__":
     ### Receive Augmentation
