@@ -34,6 +34,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - <details>
         <summary>Fientune DeBERTav3</summary>
+
         Usage:
         ```
         python3 src/finetune.py 
@@ -45,6 +46,7 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - <details>
         <summary>Evaluate with Finetuned Model:</summary>
+
         Usage:
         ```
         python3 src/inference.py 
@@ -56,8 +58,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
     - <details>
         <summary>Evaluate F1 Score</summary>
+
+        Usage:
         ```
-        usage: neat_metrics.py [-h] [--ground_truth GROUND_TRUTH]
+        python3 neat_metrics.py [-h] [--ground_truth GROUND_TRUTH]
                         [--ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]]
                         [--pred PRED]
                         [--prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]]
@@ -82,7 +86,8 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         </detail>
 
     - <details>
-        <summary>Full Command</summary>
+        <summary>ChatGPT Full Command</summary>
+
         ```bash
         # ChatGPT on HTUnsup
 
@@ -106,39 +111,11 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --prediction ./results/HTName_chatgpt.csv \
             --prediction_column gpt_name
 
-        # ChatGPT on HTUnified
-
-        python3 src/openai_infer.py \
-            --data ./data/HTUnified.csv \
-            --save_path ./results/HTUnified_chatgpt.csv \
-            --result_column chatgpt_response \
-            --model gpt3.5
-
-        python3 src/metrics.py \
-            --ground_truth ./results/HTUnified_chatgpt.csv  \
-            --ground_truth_column name \
-            --prediction ./results/HTUnified_chatgpt.csv \
-            --prediction_column gpt_name
-
-        python3 src/metrics.py \
-            --ground_truth ./results/HTUnified_chatgpt.csv  \
-            --ground_truth_column location \
-            --prediction ./results/HTUnified_chatgpt.csv \
-            --prediction_column gpt_location
-
-        # Data Preprocess
-
-        python3 src/preprocess/human_trafficking.py
-        python3 src/preprocess/few_nerd.py
-        python3 src/preprocess/wikiner.py
-
-        # Verify Dataset
-        python3 src/dataset.py
         ```
         </details>
         
         <details>
-        <summary>Finetune</summary>
+        <summary>Finetune Full Command</summary>
         
         Reference: https://github.com/huggingface/peft#token-classification
         
@@ -174,18 +151,6 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         - OPT-350M
             ```model_name = "facebook/opt-350m"```
 
-        ### LLM with LORA
-        ```bash
-        # Change cache directory to scratch:
-        export TRANSFORMERS_CACHE=$SCRATCH
-        ```
-        - BLOOM-7B
-            ```model_name = "bigscience/bloom-7b1"```
-        - GPT-J
-            ```model_name = "EleutherAI/gpt-j-6B"```
-        - LLAMA-7B
-            ```model_name = "decapoda-research/llama-7b-hf"```
-
         </details>
 
-    More exctuable commands for training can be found in [finetune.sh](./scripts/finetune.sh), for evaluting can be found in [eval.sh](./scripts/eval.sh)
+    More and detailed exctuable commands for training can be found in [finetune.sh](./scripts/finetune.sh), for evaluting can be found in [eval.sh](./scripts/eval.sh)
