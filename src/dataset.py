@@ -570,8 +570,13 @@ def wikiner(root, language="en"):
     # ratio = {'train':int(0.8*full_ds), 'valid':0.1, 'test':0.1}
     tds = Dataset.from_pandas(full_df.iloc[0 : int(ratio[0] * len(full_df))])
     vds = Dataset.from_pandas(
-        full_df.iloc[int(ratio[0] * len(full_df)) : int((ratio[0]+ratio[1]) * len(full_df)) ])
-    testds = Dataset.from_pandas(full_df.iloc[int((ratio[0]+ratio[1]) * len(full_df)) :])
+        full_df.iloc[
+            int(ratio[0] * len(full_df)) : int((ratio[0] + ratio[1]) * len(full_df))
+        ]
+    )
+    testds = Dataset.from_pandas(
+        full_df.iloc[int((ratio[0] + ratio[1]) * len(full_df)) :]
+    )
 
     datasets = DatasetDict()
 
@@ -659,7 +664,7 @@ def ht_unsup(root, kargs):
 
 def ht_gen(root, kargs):
     import pandas as pd
-    
+
     full_df = help_load(pd.read_csv(pj(root, "HTGen_tokenized.csv")))
     tds = vds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
@@ -725,8 +730,8 @@ def ontonotes5():
         "B-CARDINAL",
         "B-DATE",
         "I-DATE",
-        "B-PERSON", # 4
-        "I-PERSON", # 5
+        "B-PERSON",  # 4
+        "I-PERSON",  # 5
         "B-NORP",
         "B-GPE",
         "I-GPE",
@@ -840,9 +845,9 @@ if __name__ == "__main__":
         print(k)
         ds = loadDataset(k, root=v)[0]
         print(ds)
-        #try:
+        # try:
         #    print(ds["test"])
-        #except: print(df['validation'])
+        # except: print(df['validation'])
     # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
     # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
     # print(
