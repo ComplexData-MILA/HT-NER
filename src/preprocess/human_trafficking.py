@@ -8,7 +8,7 @@ os.makedirs(cache_path, exist_ok=True)
 delEmpty = lambda x: [] if all(not y for y in x) else x
 tokenizer = RegexpTokenizer(r"[/|(|)|{|}|$|?|!]|\w+|\$[\d\.]+|\S+")
 name_tokenizer = RegexpTokenizer(r"\w+")
-location_tokenizer = RegexpTokenizer(r"\w+|\$[\d\.]+")
+location_tokenizer = RegexpTokenizer(r"\w+|\$[\d\.|-]+|\d+")
 
 
 def parse_name(n, default):
@@ -20,7 +20,8 @@ def parse_name(n, default):
 
 
 def load(fn, text_cols, label_cols, default, tokenize=True):
-
+    print(f"Processing: {fn}")
+    
     df = pd.read_csv(fn)
     df = df[text_cols + label_cols]
 
@@ -36,7 +37,27 @@ def load(fn, text_cols, label_cols, default, tokenize=True):
     tokens, tags = [], []
     for i, line in df.iterrows():
         text = line["text"]
+        
+        if "HTGen" in fn:
+            text = text.replace('Title: ', '').replace('Description: ', '')
+            
+            if len(text)<20:continue
+            filter_words = ["realistic", "examples", "sure", "human", "trafficking"]
+            if any(x in text.lower() for x in filter_words):
+                # print(text)
+                if len(text.split(':')[-1]) > 2:
+                    text = text.split(':')[-1]
+                    if any(x in text.lower() for x in filter_words):
+                        continue
+                    # print(text)
+                    # print(text.split(':')[-1], "\n####",line['gpt_name'])
+                else:
+                    continue
+        
         token = tokenizer.tokenize(text)
+        
+        if len(token) < 5: continue
+        
         tokens.append(token)
 
         tag = ["O" for _ in range(len(token))]
@@ -66,8 +87,17 @@ def update_label_list4name(tokenized_text, label, label_list, label_name):
     ts, tls = set(tmp_token), set(tmp_token_lower)
     if ";" in label:
         label = label.replace(";", "|")
+    if len(label) > 20:
+        label = label.split('||')[-1]
+        if len(label) > 20:
+            label = label.split('"|')[-1]
+            if '1. ' in label:
+                label = label.split('|')[-1]
+                label = '|'.join(xl for xl in label.split('|') if len(xl)<20)
+        # print(label)
+        # return []
     label_splited = [x.strip() for x in delEmpty(label.split("|"))]
-
+    
     for tag_single in label_splited:
         for ind, ttag in enumerate(name_tokenizer.tokenize(tag_single)):
             # if ttag in ts:
@@ -86,8 +116,7 @@ def update_label_list4name(tokenized_text, label, label_list, label_name):
                     break
 
             if len(all_positions) == 0:
-                # print(tmp_token)
-                # print(ttag)
+                print(tmp_token)
                 print(label_name, ttag)
                 continue
                 # raise Exception("Not found")
@@ -110,14 +139,19 @@ def update_label_list4loc(tokenized_text, label, label_list, label_name):
 
     for tag_single in label_splited:
         for ind, ttag in enumerate(location_tokenizer.tokenize(tag_single)):
-            s = tmp_token.index(ttag)
-            if ind == 0:
-                label_list[pointer + s] = f"B-{label_name}"
-            else:
-                label_list[pointer + s] = f"I-{label_name}"
-            pointer += s
-            tmp_token = tmp_token[s:]
-
+            try:
+                s = tmp_token.index(ttag)
+                if ind == 0:
+                    label_list[pointer + s] = f"B-{label_name}"
+                else:
+                    label_list[pointer + s] = f"I-{label_name}"
+                pointer += s
+                tmp_token = tmp_token[s:]
+            except:
+                # print(tmp_token)
+                print(ttag)
+                pass
+                
     return label_list
 
 
@@ -159,7 +193,7 @@ def update_label_list4loc_unsup(tokenized_text, label, label_list, label_name):
         if len(tag_single) <= 1:
             continue
         for ind, ttag in enumerate(location_tokenizer.tokenize(tag_single)):
-            if ttag in words_trash:
+            if ttag.lower() in words_trash:
                 continue
             all_positions = []
             for i, t in enumerate(tmp_token_lower):
@@ -208,6 +242,15 @@ def getHTUnsupRaw():
     )
 
 
+def getHTGenpRaw():
+    return load(
+        "results/HTGen_chatgpt.csv",
+        ["description"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+        False,
+    )
+
 if __name__ == "__main__":
     # Name
     df = load(
@@ -239,3 +282,13 @@ if __name__ == "__main__":
     # name: 9 miss matched
 
     df.to_csv(pj(cache_path, "HTUnsup_tokenized.csv"), index=False)
+
+    # Gen
+    df = load(
+        "results/HTGen_chatgpt_6k.csv",
+        ["description"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+    )
+    
+    df.to_csv(pj(cache_path, "HTGen_tokenized.csv"), index=False)
