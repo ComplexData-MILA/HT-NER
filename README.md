@@ -1,16 +1,9 @@
-Calendar    https://docs.google.com/spreadsheets/d/1DLX0il3okq-H7Snnuz8liA4wFwxoqZRWYzVesoX8efk
+# SWEET - Weakly Supervised Person Name Extraction for Fighting Human Trafficking
 
-OVERLEAF	https://www.overleaf.com/project/63ce0f2bdd6d9dd2b1dbc973
+## Repository Contributor: 
+Hao Yu, Javin Liu, Vidua Sujaya
 
-GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
-
-**Dev Repo**
-
-# The Name Extraction Framework for Combating Human Trafficking
-## Author: 
-- Javin: GPT-based name expansion and GPT based data-label generations
-- Vidya: Aggregation
-- Peter: ChatGPT/GPT4 based pseudo labels to finetune BERT
+- Hao Yu: ChatGPT/GPT4 based pseudo labels to finetune BERT
     - <details>
         <summary>ChatGPT/GPT gerenating pseudo labels</summary>
         
@@ -189,3 +182,6 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         </details>
 
     More exctuable commands for training can be found in [finetune.sh](./scripts/finetune.sh), for evaluting can be found in [eval.sh](./scripts/eval.sh)
+
+- Javin Liu: GPT-based name expansion and GPT based data-label generations
+- Vidya: Aggregation
