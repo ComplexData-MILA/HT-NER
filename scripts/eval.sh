@@ -14,10 +14,8 @@ python3 src/finetune_evaluation.py --base-model ./saved_models/deberta-v3-base-p
 python3 src/finetune_evaluation.py --base-model ./saved_models/roberta-base-polyglot_ner/checkpoint-3755 --datasets polyglot_ner
 
 
-python3 src/finetune_evaluation.py --base-model ./saved_models/deberta-v3-base-HTGen/checkpoint-200 --datasets HTGen
-python3 src/finetune_evaluation.py --base-model ./saved_models/roberta-base-HTGen/checkpoint-200 --datasets HTGen
-
-
+python3 src/finetune_evaluation.py --base-model ./saved_models/deberta-v3-base-HTGen/checkpoint-730 --datasets HTGen
+python3 src/finetune_evaluation.py --base-model ./saved_models/roberta-base-HTGen/checkpoint-730 --datasets HTGen
 
 
 
@@ -36,6 +34,8 @@ python3 src/finetune_evaluation_HT.py --base-model ./saved_models/roberta-base-f
 python3 src/finetune_evaluation_HT.py --base-model ./saved_models/deberta-v3-base-polyglot_ner/checkpoint-7505 --datasets polyglot_ner
 python3 src/finetune_evaluation_HT.py --base-model ./saved_models/roberta-base-polyglot_ner/checkpoint-3755 --datasets polyglot_ner
 
+python3 src/finetune_evaluation_HT.py --base-model ./saved_models/deberta-v3-base-HTGen/checkpoint-730 --datasets HTGen
+python3 src/finetune_evaluation_HT.py --base-model ./saved_models/roberta-base-HTGen/checkpoint-730 --datasets HTGen
 
 
 # python3 src/finetune_evaluation_HT.py --base-model ./saved_models/deberta-v3-base-ontonotes5/checkpoint-955 --datasets ontonotes5

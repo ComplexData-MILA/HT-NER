@@ -20,7 +20,8 @@ def parse_name(n, default):
 
 
 def load(fn, text_cols, label_cols, default, tokenize=True):
-
+    print(f"Processing: {fn}")
+    
     df = pd.read_csv(fn)
     df = df[text_cols + label_cols]
 
@@ -36,7 +37,27 @@ def load(fn, text_cols, label_cols, default, tokenize=True):
     tokens, tags = [], []
     for i, line in df.iterrows():
         text = line["text"]
+        
+        if "HTGen" in fn:
+            text = text.replace('Title: ', '').replace('Description: ', '')
+            
+            if len(text)<20:continue
+            filter_words = ["realistic", "examples", "sure", "human", "trafficking"]
+            if any(x in text.lower() for x in filter_words):
+                # print(text)
+                if len(text.split(':')[-1]) > 2:
+                    text = text.split(':')[-1]
+                    if any(x in text.lower() for x in filter_words):
+                        continue
+                    # print(text)
+                    # print(text.split(':')[-1], "\n####",line['gpt_name'])
+                else:
+                    continue
+        
         token = tokenizer.tokenize(text)
+        
+        if len(token) < 5: continue
+        
         tokens.append(token)
 
         tag = ["O" for _ in range(len(token))]
@@ -66,8 +87,17 @@ def update_label_list4name(tokenized_text, label, label_list, label_name):
     ts, tls = set(tmp_token), set(tmp_token_lower)
     if ";" in label:
         label = label.replace(";", "|")
+    if len(label) > 20:
+        label = label.split('||')[-1]
+        if len(label) > 20:
+            label = label.split('"|')[-1]
+            if '1. ' in label:
+                label = label.split('|')[-1]
+                label = '|'.join(xl for xl in label.split('|') if len(xl)<20)
+        # print(label)
+        # return []
     label_splited = [x.strip() for x in delEmpty(label.split("|"))]
-
+    
     for tag_single in label_splited:
         for ind, ttag in enumerate(name_tokenizer.tokenize(tag_single)):
             # if ttag in ts:
@@ -86,8 +116,7 @@ def update_label_list4name(tokenized_text, label, label_list, label_name):
                     break
 
             if len(all_positions) == 0:
-                # print(tmp_token)
-                # print(ttag)
+                print(tmp_token)
                 print(label_name, ttag)
                 continue
                 # raise Exception("Not found")
@@ -121,6 +150,7 @@ def update_label_list4loc(tokenized_text, label, label_list, label_name):
             except:
                 # print(tmp_token)
                 print(ttag)
+                pass
                 
     return label_list
 
@@ -163,7 +193,7 @@ def update_label_list4loc_unsup(tokenized_text, label, label_list, label_name):
         if len(tag_single) <= 1:
             continue
         for ind, ttag in enumerate(location_tokenizer.tokenize(tag_single)):
-            if ttag in words_trash:
+            if ttag.lower() in words_trash:
                 continue
             all_positions = []
             for i, t in enumerate(tmp_token_lower):
@@ -255,7 +285,7 @@ if __name__ == "__main__":
 
     # Gen
     df = load(
-        "results/HTGen_chatgpt.csv",
+        "results/HTGen_chatgpt_6k.csv",
         ["description"],
         ["gpt_location", "gpt_name"],
         "NAME",

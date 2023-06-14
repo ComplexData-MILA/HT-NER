@@ -11,7 +11,9 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 - Javin: GPT-based name expansion and GPT based data-label generations
 - Vidya: Aggregation
 - Peter: ChatGPT/GPT4 based pseudo labels to finetune BERT
-    - ChatGPT/GPT gerenating pseudo labels:
+    - <details>
+        <summary>ChatGPT/GPT gerenating pseudo labels</summary>
+        
         PreCondition: ```export OPENAI_API_KEY='yourkey'```
         Usage: 
         ```
@@ -28,8 +30,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --result_column_name RESULT_COLUMN_NAME
             --verbose
         ```
+        </detail>
 
-    - Fientune DeBERTav3:
+    - <details>
+        <summary>Fientune DeBERTav3</summary>
         Usage:
         ```
         python3 src/finetune.py 
@@ -37,8 +41,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --label_column gpt_name gpt_location gpt_social_media
             --save_dir ./models
         ```
+        </detail>
 
-    - Evaluate with Finetuned Model:
+    - <details>
+        <summary>Evaluate with Finetuned Model:</summary>
         Usage:
         ```
         python3 src/inference.py 
@@ -46,10 +52,12 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
             --label_column gpt_name gpt_location gpt_social_media
             --save_path ./prediction/HT1K_finetune.csv
         ```
+        </detail>
 
-    - Evaluate F1:
+    - <details>
+        <summary>Evaluate F1 Score</summary>
         ```
-        usage: metrics.py [-h] [--ground_truth GROUND_TRUTH]
+        usage: neat_metrics.py [-h] [--ground_truth GROUND_TRUTH]
                         [--ground_truth_column GROUND_TRUTH_COLUMN [GROUND_TRUTH_COLUMN ...]]
                         [--pred PRED]
                         [--prediction_column PREDICTION_COLUMN [PREDICTION_COLUMN ...]]
@@ -71,13 +79,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
                                 Names of columns in prediction CSV
                                 file that contain the entities.
         ```
-        <!-- python3 src/evalute.py \
-            --ground_truth dataset-name | csv_file
-            --ground_truth_column gpt_name gpt_location gpt_social_media
-            --pred './prediction/HT1K_finetune.csv'
-            --predition_column name location social_media -->
+        </detail>
 
-    - Full Command:
+    - <details>
+        <summary>Full Command</summary>
         ```bash
         # ChatGPT on HTUnsup
 
@@ -130,9 +135,10 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
         # Verify Dataset
         python3 src/dataset.py
         ```
-
+        </details>
+        
         <details>
-        <summary>*Finetune*</summary>
+        <summary>Finetune</summary>
         
         Reference: https://github.com/huggingface/peft#token-classification
         
@@ -182,36 +188,4 @@ GITHUB Repo	https://github.com/ComplexData-MILA/HT-NER
 
         </details>
 
-
-File Structure After Data Preprocess:
-```
-    data
-    ├── cache
-    │   ├── Few-NERD
-    │   │   ├── dev.csv
-    │   │   ├── dev_L1.csv
-    │   │   ├── test.csv
-    │   │   ├── test_L1.csv
-    │   │   ├── train.csv
-    │   │   └── train_L1.csv
-    │   ├── HT
-    │   │   ├── HTName_tokenized.csv
-    │   │   ├── HTUnified_tokenized.csv
-    │   │   └── HTUnsup_tokenized.csv
-    │   └── wikiner-en
-    │       └── aij-wikiner-en-wp2.csv
-    ├── Few-NERD
-    │   ├── dev.txt
-    │   ├── supervised.zip
-    │   ├── test.txt
-    │   └── train.txt
-    ├── HT
-    │   ├── HTName.csv
-    │   ├── HTUnified.csv
-    │   └── HTUnsup.csv
-    └── wikiner-en
-        └── aij-wikiner-en-wp2.bz2
-
-```
-
-## Paper
+    More exctuable commands for training can be found in [finetune.sh](./scripts/finetune.sh), for evaluting can be found in [eval.sh](./scripts/eval.sh)
