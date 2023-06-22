@@ -53,7 +53,7 @@ lr = 2e-5 / 128 * batch_size
 
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,
-    ROOTS[dataset_name],
+    ROOTS(dataset_name),
     substitude=args.substitude,
     onlyLoc=args.only_loc,
 )
