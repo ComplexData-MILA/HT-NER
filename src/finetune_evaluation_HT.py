@@ -15,16 +15,6 @@ from transformers import (
     DataCollatorForTokenClassification,
 )
 
-from models.debertav2 import (
-    DebertaV2CRF,
-    DebertaV2GlobalPointer,
-    DebertaV2TokenClassification,
-)
-from models.debertav2 import (
-    DebertaV2CRFDataCollator,
-    DebertaV2GlobalPointerDataCollator,
-)
-
 
 def main(args):
     model_checkpoint = args.base_model
@@ -54,9 +44,6 @@ def main(args):
     structure_improve = args.sub_structure.split("-")
     # only possible substructure: CRF, GP, BiL
     Deberta_ModelZoo = {
-        "GP": (DebertaV2GlobalPointer, DebertaV2GlobalPointerDataCollator),
-        "CRF": (DebertaV2CRF, DebertaV2CRFDataCollator),
-        "BiL": (DebertaV2TokenClassification, DataCollatorForTokenClassification),
         "other": (AutoModelForTokenClassification, DataCollatorForTokenClassification),
     }
     assert not (
@@ -97,15 +84,15 @@ def main(args):
     from transformers import pipeline, TokenClassificationPipeline
     from nltk.tokenize.treebank import TreebankWordDetokenizer as Detok
 
-    # from tqdm import tqdm
-    # tqdm.pandas()
     def evaluateHT(extractor, df, text_col="text", label_col="name"):
         assert label_col in df.columns
         pred_col = "pred"
         target_entity_map = {
             "name": ["PER", "NAME", "person", "PERSON"],
+            "gpt_name": ["PER", "NAME", "person", "PERSON"],
             "label": ["PER", "NAME", "person", "PERSON"],
             "location": ["LOC", "building", "location", "GPE"],
+            "gpt_location": ["LOC", "building", "location", "GPE"],
         }
         name_set = target_entity_map[label_col]
         name_set = set(
@@ -172,7 +159,12 @@ def main(args):
         aggregation_strategy="simple",
     )
 
-    from preprocess.human_trafficking import getHTNameRaw, getHTUnifiedRaw
+    from preprocess.human_trafficking import (
+        getHTNameRaw,
+        getHTUnifiedRaw,
+        getHTGen6kRaw,
+        getHTGen12kRaw,
+    )
 
     print("Evalute on HTName:")
     HTUName = evaluateHT(extractor, getHTNameRaw(), label_col="label")
@@ -189,6 +181,14 @@ def main(args):
     HTUName.rename(columns={"pred": "name"}, inplace=True)
     HTUName["location"] = HTULocation["pred"]
     HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv", index=False)
+
+    print("Evalute on HTGen 6k:")
+    HTUName = evaluateHT(extractor, getHTGen6kRaw(), label_col="gpt_name")
+    HTUName.to_csv(f"./results/finetune/HTGen6k_{model_name}.csv", index=False)
+
+    print("Evalute on HTGen 12K:")
+    HTUName = evaluateHT(extractor, getHTGen12kRaw(), label_col="gpt_name")
+    HTUName.to_csv(f"./results/finetune/HTGen12k_{model_name}.csv", index=False)
 
 
 if __name__ == "__main__":

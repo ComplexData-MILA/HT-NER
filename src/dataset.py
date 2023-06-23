@@ -1,4 +1,3 @@
-# %%
 from functools import partial
 from datasets import load_dataset, Dataset, DatasetDict
 import pandas as pd
@@ -7,10 +6,7 @@ from os.path import join as pj
 
 cache_path = os.getenv("SCRATCH")
 
-# datasets = load_dataset("conll2003")
-# datasets = load_dataset("tner/wnut2017")
-
-ROOTS = {
+ROOTS_OPTIONS = {
     "conll2003": "",
     "wnut2017": "",
     "polyglot_ner": "",
@@ -20,13 +16,21 @@ ROOTS = {
     "HTName": "./data/cache/HT",
     "HTUnified": "./data/cache/HT",
     "HTUnsup": "./data/cache/HT",
-    "HTGen": "./data/cache/HT",
+    "HTGen-6k": "./data/cache/HT",
+    "HTGen-12k": "./data/cache/HT",
 }
+
+
+def ROOTS(name):
+    if name in ROOTS_OPTIONS:
+        return ROOTS_OPTIONS[name]
+    if "ht" in name.lower():
+        return "./data/cache/HT"
+    assert False, f"Unknown dataset {name}"
 
 
 def load_street_name(root="../data/oda"):
     import json
-    from glob import glob
 
     all_data = {}
     state_short = ["AB", "BC", "MB", "NB", "NS", "NT", "ON", "PE", "QC", "SK"]
@@ -71,8 +75,30 @@ def _loadWrapper(ds_name, root, kargs):
     elif ds_name in ["HTUnsup", "HTunsup", "htunsup"]:
         assert root, "HT dataset need root path"
         return ht_unsup(root, kargs)
-    elif ds_name in ["HTGen", "HTgen", "htgen"]:
+    elif ds_name in [
+        "HTGen",
+        "HTgen",
+        "htgen",
+        "HTGen-6k",
+        "HTgen-6k",
+        "htgen-6k",
+        "HTGen6k",
+        "HTgen6k",
+        "htgen6k",
+    ]:
         assert root, "HT dataset need root path"
+        kargs.update({"version": "6k"})
+        return ht_gen(root, kargs)
+    elif ds_name in [
+        "HTGen-12k",
+        "HTgen-12k",
+        "htgen-12k",
+        "HTGen12k",
+        "HTgen12k",
+        "htgen12k",
+    ]:
+        assert root, "HT dataset need root path"
+        kargs.update({"version": "12k"})
         return ht_gen(root, kargs)
     elif ds_name in ["polyglot_ner"]:
         return polyglot_ner()
@@ -570,8 +596,13 @@ def wikiner(root, language="en"):
     # ratio = {'train':int(0.8*full_ds), 'valid':0.1, 'test':0.1}
     tds = Dataset.from_pandas(full_df.iloc[0 : int(ratio[0] * len(full_df))])
     vds = Dataset.from_pandas(
-        full_df.iloc[int(ratio[0] * len(full_df)) : int((ratio[0]+ratio[1]) * len(full_df)) ])
-    testds = Dataset.from_pandas(full_df.iloc[int((ratio[0]+ratio[1]) * len(full_df)) :])
+        full_df.iloc[
+            int(ratio[0] * len(full_df)) : int((ratio[0] + ratio[1]) * len(full_df))
+        ]
+    )
+    testds = Dataset.from_pandas(
+        full_df.iloc[int((ratio[0] + ratio[1]) * len(full_df)) :]
+    )
 
     datasets = DatasetDict()
 
@@ -659,12 +690,14 @@ def ht_unsup(root, kargs):
 
 def ht_gen(root, kargs):
     import pandas as pd
-    
-    full_df = help_load(pd.read_csv(pj(root, "HTGen_tokenized.csv")))
-    tds = vds = Dataset.from_pandas(full_df)
+
+    if kargs.get("version", "6k") == "6k":
+        full_df = help_load(pd.read_csv(pj(root, "HTGen-6k_tokenized.csv")))
+    else:
+        full_df = help_load(pd.read_csv(pj(root, "HTGen-12k_tokenized.csv")))
+    ds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
-    datasets["train"] = tds
-    datasets["validation"] = vds
+    datasets["train"] = datasets["validation"] = datasets["test"] = ds
     label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
     return datasets, label_list, "tags"
 
@@ -725,8 +758,8 @@ def ontonotes5():
         "B-CARDINAL",
         "B-DATE",
         "I-DATE",
-        "B-PERSON", # 4
-        "I-PERSON", # 5
+        "B-PERSON",  # 4
+        "I-PERSON",  # 5
         "B-NORP",
         "B-GPE",
         "I-GPE",
@@ -832,27 +865,9 @@ def help_load(df, f=None):
 
 # %%
 if __name__ == "__main__":
-    # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
-    # print(len(data))
     from pprint import pprint
 
-    for k, v in ROOTS.items():
+    for k, v in ROOTS_OPTIONS.items():
         print(k)
         ds = loadDataset(k, root=v)[0]
         print(ds)
-        #try:
-        #    print(ds["test"])
-        #except: print(df['validation'])
-    # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
-    # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
-    # print(
-    #     loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
-    # )
-    # print(
-    #     loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
-    #         4
-    #     ]
-    # )
-    # print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    # print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    # print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])

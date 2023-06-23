@@ -15,16 +15,6 @@ from transformers import (
     DataCollatorForTokenClassification,
 )
 
-from models.debertav2 import (
-    DebertaV2CRF,
-    DebertaV2GlobalPointer,
-    DebertaV2TokenClassification,
-)
-from models.debertav2 import (
-    DebertaV2CRFDataCollator,
-    DebertaV2GlobalPointerDataCollator,
-)
-
 
 def main(args):
     model_checkpoint = args.base_model
@@ -54,9 +44,6 @@ def main(args):
     structure_improve = args.sub_structure.split("-")
     # only possible substructure: CRF, GP, BiL
     Deberta_ModelZoo = {
-        "GP": (DebertaV2GlobalPointer, DebertaV2GlobalPointerDataCollator),
-        "CRF": (DebertaV2CRF, DebertaV2CRFDataCollator),
-        "BiL": (DebertaV2TokenClassification, DataCollatorForTokenClassification),
         "other": (AutoModelForTokenClassification, DataCollatorForTokenClassification),
     }
     assert not (
@@ -97,9 +84,6 @@ def main(args):
     from transformers import pipeline, TokenClassificationPipeline
     from nltk.tokenize.treebank import TreebankWordDetokenizer as Detok
 
-    # from tqdm import tqdm
-    # tqdm.pandas()
-
     detokenizer = Detok()
 
     def deToken(tokens):
@@ -117,7 +101,7 @@ def main(args):
         # assert label_col in df.columns
         datasets, label_list, label_col_name = loadDataset(
             dataset_name,
-            ROOTS[dataset_name],
+            ROOTS(dataset_name),
             substitude=0,
             onlyLoc=0,
         )
@@ -150,9 +134,6 @@ def main(args):
                     if x["start"] == new[-1]["end"]:
                         new[-1]["end"] = x["end"]
                         new[-1]["word"] += x["word"]
-                    # elif x["start"] == new[-1]["end"] + 1:
-                    #     new[-1]["end"] = x["end"]
-                    #     new[-1]["word"] += " " + x["word"]
                     else:
                         new.append(x)
             return "|".join([x["word"].strip() for x in new])
@@ -199,6 +180,7 @@ def main(args):
     evaluateGeneral(extractor, "fewnerd-l1").to_csv(
         f"./results/finetune2/fewnerdl1_{model_name}.csv"
     )
+
 
 if __name__ == "__main__":
     ### Receive Augmentation

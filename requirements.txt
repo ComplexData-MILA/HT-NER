@@ -2,3 +2,8 @@ openai
 tqdm
 pandas
 numpy
+pytorch
+tensorboard
+ark_nlp
+transformers
+scikit-learn

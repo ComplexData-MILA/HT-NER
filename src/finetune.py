@@ -15,14 +15,6 @@ from transformers import (
     DataCollatorForTokenClassification,
     EarlyStoppingCallback,
 )
-from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
-
-# peft_config = LoraConfig(
-#     task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1
-# )
-# model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path)
-# model = get_peft_model(model, peft_config)
-# model.print_trainable_parameters()
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
@@ -61,7 +53,7 @@ lr = 2e-5 / 128 * batch_size
 
 datasets, label_list, label_col_name = loadDataset(
     dataset_name,
-    ROOTS[dataset_name],
+    ROOTS(dataset_name),
     substitude=args.substitude,
     onlyLoc=args.only_loc,
 )
@@ -117,16 +109,6 @@ def tokenize_and_align_labels(examples, label_all_tokens=True):
 tokenized_datasets = datasets.map(tokenize_and_align_labels, batched=True)
 do_eval = "validation" in tokenized_datasets
 
-from models.debertav2 import (
-    DebertaV2CRF,
-    DebertaV2GlobalPointer,
-    DebertaV2TokenClassification,
-)
-from models.debertav2 import (
-    DebertaV2CRFDataCollator,
-    DebertaV2GlobalPointerDataCollator,
-)
-
 config = AutoConfig.from_pretrained(
     model_checkpoint, id2label=id2l, label2id=l2id, num_labels=len(label_list)
 )
@@ -135,33 +117,14 @@ config = AutoConfig.from_pretrained(
 # num_labels (int, optional) — Number of labels to use in the last layer added to the model, typically for a classification task.
 
 structure_improve = args.sub_structure.split("-")
-# only possible substructure: CRF, GP, BiL
 Deberta_ModelZoo = {
-    "GP": (DebertaV2GlobalPointer, DebertaV2GlobalPointerDataCollator),
-    "CRF": (DebertaV2CRF, DebertaV2CRFDataCollator),
-    "BiL": (DebertaV2TokenClassification, DataCollatorForTokenClassification),
     "other": (AutoModelForTokenClassification, DataCollatorForTokenClassification),
 }
-assert not (
-    "CRF" in structure_improve and "GP" in structure_improve
-), "CRF and GP can only use one of them!"
-if "CRF" in structure_improve:
-    ModelClass = Deberta_ModelZoo["CRF"]
-elif "GP" in structure_improve:
-    ModelClass = Deberta_ModelZoo["GP"]
-elif "BiL" in structure_improve:
-    ModelClass = Deberta_ModelZoo["BiL"]
-else:
-    ModelClass = Deberta_ModelZoo["other"]
+ModelClass = Deberta_ModelZoo["other"]
 config.BiLSTM = "BiL" in structure_improve
-# config.num_labels = len(label_list) + 1 if 'CRF' in structure_improve else len(label_list)
-
 model = ModelClass[0].from_pretrained(
     model_checkpoint, ignore_mismatched_sizes=True, config=config
 )
-# model = AutoModelForTokenClassification.from_pretrained(
-#     model_checkpoint, ignore_mismatched_sizes=True, config=config
-# )
 
 data_collator = ModelClass[1](tokenizer)
 data_collator.num_labels = len(label_list)
