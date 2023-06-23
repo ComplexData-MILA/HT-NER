@@ -1,4 +1,3 @@
-# %%
 from functools import partial
 from datasets import load_dataset, Dataset, DatasetDict
 import pandas as pd
@@ -866,29 +865,9 @@ def help_load(df, f=None):
 
 # %%
 if __name__ == "__main__":
-    # data = load_street_name('/home/mila/h/hao.yu/ht/HTResearch/data/oda')
-    # print(len(data))
     from pprint import pprint
 
     for k, v in ROOTS_OPTIONS.items():
-        if "HT" not in k:
-            continue
         print(k)
         ds = loadDataset(k, root=v)[0]
         print(ds)
-        # try:
-        #    print(ds["test"])
-        # except: print(df['validation'])
-    # print(loadDataset("conll2003")[0]["train"]["tokens"][4])
-    # print(loadDataset("wnut2017")[0]["train"]["tokens"][4])
-    # print(
-    #     loadDataset("fewnerd-l1", root="./data/cache/Few-NERD")[0]["train"]["tokens"][4]
-    # )
-    # print(
-    #     loadDataset("wikiner-en", root="./data/cache/wikiner-en")[0]["train"]["tokens"][
-    #         4
-    #     ]
-    # )
-    # print(loadDataset("HTName", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    # print(loadDataset("HTUnified", root="./data/cache/HT")[0]["train"]["tokens"][4])
-    # print(loadDataset("HTUnsup", root="./data/cache/HT")[0]["train"]["tokens"][4])

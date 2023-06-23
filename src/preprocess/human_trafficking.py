@@ -48,6 +48,9 @@ def load(fn, text_cols, label_cols, default, tokenize=True):
                         return False
                 else:
                     return False
+            if len(tokenizer.tokenize(text)) < 5:
+                return False
+
             texts.append(text)
             return True
 
