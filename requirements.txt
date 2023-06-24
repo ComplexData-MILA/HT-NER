@@ -1,7 +1,13 @@
-openai
-tqdm
-pandas
+beautifulsoup4
+nltk
 numpy
+openai
+pandas
+skweak
+spacy
+spacymoji
+tqdm
+truecase
 pytorch
 tensorboard
 ark_nlp
