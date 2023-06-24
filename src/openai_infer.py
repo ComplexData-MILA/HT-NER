@@ -184,11 +184,15 @@ if __name__ == "__main__":
     for i, text in enumerate(tqdm(df["text"].tolist())):
         if i < len(responses):
             continue
-        try:
-            response = request(ht_prompt, text, model=args.model)
-        except Exception as e:
-            print(e)
-            exit()
+        
+        while True:
+            try:
+                response = request(ht_prompt, text, model=args.model)
+                break 
+            except Exception as e:
+                print("Error Type:", e)
+                print("Retrying in 10 seconds...")
+                time.sleep(10)
 
         responses.append(json.dumps(response))
         with open(local_storage, "wb") as f:
