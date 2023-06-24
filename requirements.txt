@@ -8,3 +8,8 @@ spacy
 spacymoji
 tqdm
 truecase
+pytorch
+tensorboard
+ark_nlp
+transformers
+scikit-learn

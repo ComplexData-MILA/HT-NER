@@ -84,33 +84,15 @@ def main(args):
     from transformers import pipeline, TokenClassificationPipeline
     from nltk.tokenize.treebank import TreebankWordDetokenizer as Detok
 
-    detokenizer = Detok()
-
-    def deToken(tokens):
-        text = detokenizer.detokenize(tokens, True)
-        text = re.sub("\s*,\s*", ", ", text)
-        text = re.sub("\s*\.\s*", ". ", text)
-        text = re.sub("\s*\?\s*", "? ", text)
-        return text
-
-    def evaluateGeneral(
-        extractor: TokenClassificationPipeline,
-        dataset_name="coll2003",
-        label_col="name",
-    ):
-        # assert label_col in df.columns
-        datasets, label_list, label_col_name = loadDataset(
-            dataset_name,
-            ROOTS(dataset_name),
-            substitude=0,
-            onlyLoc=0,
-        )
-        df = datasets["test"].to_pandas()
-
+    def evaluateHT(extractor, df, text_col="text", label_col="name"):
+        assert label_col in df.columns
+        pred_col = "pred"
         target_entity_map = {
             "name": ["PER", "NAME", "person", "PERSON"],
+            "gpt_name": ["PER", "NAME", "person", "PERSON"],
             "label": ["PER", "NAME", "person", "PERSON"],
             "location": ["LOC", "building", "location", "GPE"],
+            "gpt_location": ["LOC", "building", "location", "GPE"],
         }
         name_set = target_entity_map[label_col]
         name_set = set(
@@ -119,9 +101,7 @@ def main(args):
         print(name_set)
 
         def step(row):
-            text = row["tokens"]
-            if not isinstance(text, str):
-                text = deToken(text)
+            text = row[text_col]
             pred = extractor(text)
             pred = [
                 x for x in pred if x.get("entity", x.get("entity_group")) in name_set
@@ -134,23 +114,41 @@ def main(args):
                     if x["start"] == new[-1]["end"]:
                         new[-1]["end"] = x["end"]
                         new[-1]["word"] += x["word"]
+                    # elif x["start"] == new[-1]["end"] + 1:
+                    #     new[-1]["end"] = x["end"]
+                    #     new[-1]["word"] += " " + x["word"]
                     else:
                         new.append(x)
             return "|".join([x["word"].strip() for x in new])
 
-        def label_step(row):
-            label = "|".join(
-                w
-                for w, l in zip(row["tokens"], row[label_col_name].tolist())
-                if (label_list[l] if isinstance(l, int) else l) in name_set
-            )
-            return label
+            # return "|".join([x["word"] for x in pred])
+            # return "|".join(filter(None, "".join([x["word"] for x in pred]).split()))
 
-        df["pred"] = df.swifter.apply(step, axis=1)  #
-        df["label"] = df.swifter.apply(label_step, axis=1)
-        df = df[["label", "pred"]]
+            # pred = [x for x in pred if x["entity"] in name_set]
+
+            # # connect tokens, if start index and next end index is the same, then connect
+            # new = []
+            # for i, x in enumerate(pred):
+            #     if i == 0:
+            #         new.append(x)
+            #     else:
+            #         if x["start"] == new[-1]["end"]:
+            #             new[-1]["end"] = x["end"]
+            #             new[-1]["word"] += x["word"]
+            #         elif x["start"] == new[-1]["end"] + 1:
+            #             new[-1]["end"] = x["end"]
+            #             new[-1]["word"] += " " + x["word"]
+            #         else:
+            #             new.append(x)
+
+            # return "|".join([x["word"] for x in new]).replace("Ġ", "").replace("▁", "")
+            # return "|".join(filter(None, "".join([x["word"] for x in pred]).split()))
+
+        df[pred_col] = df.swifter.apply(step, axis=1)
+        df = df[[label_col, pred_col]]
         print(df.head())
-        f1(df, df, ["label"], ["pred"])
+
+        f1(df, df, [label_col], [pred_col])
         return df
 
     extractor = pipeline(
@@ -161,25 +159,36 @@ def main(args):
         aggregation_strategy="simple",
     )
 
-    print("Evalute on CoNLL2003:")
-    evaluateGeneral(extractor, "conll2003").to_csv(
-        f"./results/finetune2/conll2003_{model_name}.csv"
+    from preprocess.human_trafficking import (
+        getHTNameRaw,
+        getHTUnifiedRaw,
+        getHTGen6kRaw,
+        getHTGen12kRaw,
     )
 
-    print("Evalute on WNUT2017:")
-    evaluateGeneral(extractor, "wnut2017").to_csv(
-        f"./results/finetune2/wnut2017_{model_name}.csv"
-    )
+    print("Evalute on HTName:")
+    HTUName = evaluateHT(extractor, getHTNameRaw(), label_col="label")
+    # HTULocation = evaluateHT(extractor, getHTNameRaw(), label_col="location")
 
-    print("Evalute on wikiner:")
-    evaluateGeneral(extractor, "wikiner-en").to_csv(
-        f"./results/finetune2/wikiner_{model_name}.csv"
-    )
+    HTUName.rename(columns={"pred": "name"}, inplace=True)
+    # HTUName["location"] = HTULocation["pred"]
+    HTUName.to_csv(f"./results/finetune/HTName_{model_name}.csv", index=False)
 
-    print("Evalute on fewnerd:")
-    evaluateGeneral(extractor, "fewnerd-l1").to_csv(
-        f"./results/finetune2/fewnerdl1_{model_name}.csv"
-    )
+    print("Evalute on HTUnified:")
+    HTUName = evaluateHT(extractor, getHTUnifiedRaw(), label_col="name")
+    HTULocation = evaluateHT(extractor, getHTUnifiedRaw(), label_col="location")
+
+    HTUName.rename(columns={"pred": "name"}, inplace=True)
+    HTUName["location"] = HTULocation["pred"]
+    HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv", index=False)
+
+    print("Evalute on HTGen 6k:")
+    HTUName = evaluateHT(extractor, getHTGen6kRaw(), label_col="gpt_name")
+    HTUName.to_csv(f"./results/finetune/HTGen6k_{model_name}.csv", index=False)
+
+    print("Evalute on HTGen 12K:")
+    HTUName = evaluateHT(extractor, getHTGen12kRaw(), label_col="gpt_name")
+    HTUName.to_csv(f"./results/finetune/HTGen12k_{model_name}.csv", index=False)
 
 
 if __name__ == "__main__":
