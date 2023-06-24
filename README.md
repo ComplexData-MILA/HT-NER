@@ -1,7 +1,7 @@
 # SWEET - Weakly Supervised Person Name Extraction for Fighting Human Trafficking
 
 ## Repository Contributor: 
-Hao Yu, Javin Liu, Vidua Sujaya
+Hao Yu, Javin Liu, Vidya Sujaya
 
 - Hao Yu: ChatGPT/GPT4 based pseudo labels to finetune BERT
     - <details>
