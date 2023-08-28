@@ -11,6 +11,8 @@ ROOTS_OPTIONS = {
     "wnut2017": "",
     "polyglot_ner": "",
     "ontonotes5": "",
+    "btwitter": "",
+    "tweebank": "",
     "fewnerd-l1": "./data/cache/Few-NERD",
     "wikiner-en": "./data/cache/wikiner-en",
     "HTName": "./data/cache/HT",
@@ -104,6 +106,10 @@ def _loadWrapper(ds_name, root, kargs):
         return polyglot_ner()
     elif ds_name in ["ontonotes5"]:
         return ontonotes5()
+    elif ds_name in ["btwitter", "broad_twitter_corpus", "broad_twitter"]:
+        return btwitter(root)
+    elif ds_name in ["tweebank"]:
+        return tweebank(root)
     elif ds_name in ["all"]:
         return unioned_datasets(root, kargs)
     else:
@@ -566,11 +572,6 @@ def fewnerd(root, only_l1=False):
     return datasets, label_list, "tags"
 
 
-def ontonotev5(root):
-    # only english
-    assert NotImplemented
-
-
 def wikiner(root, language="en"):
     assert language in ["en"]
     import bz2
@@ -792,9 +793,47 @@ def ontonotes5():
         "I-ORDINAL",
         "I-LANGUAGE",
     ]
-    print(ds["train"][0])
+    # print(ds["train"][0])
     return ds, label_list, "tags"
 
+def btwitter(root):
+    ds = load_dataset("strombergnlp/broad_twitter_corpus", cache_dir=cache_path)  # or "GateNLP/broad_twitter_corpus"
+    # ds = ds.filter(lambda x: x["ner_tags"])
+    label_list = [
+        "O",
+        "B-PER",
+        "I-PER",
+        "B-ORG",
+        "I-ORG",
+        "B-LOC",
+        "I-LOC",
+    ]
+    return ds, label_list, "ner_tags"
+
+def tweebank(root):
+    ds = load_dataset("tner/tweebank_ner", cache_dir=cache_path) 
+    # ds = ds.filter(lambda x: x["ner_tags"])
+    # "B-LOC": 0,
+    # "B-MISC": 1,
+    # "B-ORG": 2,
+    # "B-PER": 3,
+    # "I-LOC": 4,
+    # "I-MISC": 5,
+    # "I-ORG": 6,
+    # "I-PER": 7,
+    # "O": 8
+    label_list = [
+        "B-LOC",
+        "B-MISC",
+        "B-ORG",
+        "B-PER",
+        "I-LOC",
+        "I-MISC",
+        "I-ORG",
+        "I-PER",
+        "O"
+    ]
+    return ds, label_list, "tags"
 
 def unioned_datasets(root, kargs):
     dataset_dict = {

@@ -1,11 +1,11 @@
-# SEED=577069
-# python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017 --seed ${SEED}
-# python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets conll2003 --seed ${SEED}
-# python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wikiner-en --seed ${SEED}
+SEED=577069
+python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017 --seed ${SEED}
+python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets conll2003 --seed ${SEED}
+python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wikiner-en --seed ${SEED}
 
-# python3 src/finetune.py --base-model "roberta-base" --datasets wnut2017 --seed ${SEED}
-# python3 src/finetune.py --base-model "roberta-base" --datasets conll2003 --seed ${SEED}
-# python3 src/finetune.py --base-model "roberta-base" --datasets wikiner-en --seed ${SEED}
+python3 src/finetune.py --base-model "roberta-base" --datasets wnut2017 --seed ${SEED}
+python3 src/finetune.py --base-model "roberta-base" --datasets conll2003 --seed ${SEED}
+python3 src/finetune.py --base-model "roberta-base" --datasets wikiner-en --seed ${SEED}
 
 export SEED=5770691
 python3 src/finetune.py --base-model "microsoft/deberta-v3-base" --datasets wnut2017 --seed ${SEED}

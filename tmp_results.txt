@@ -1,0 +1,359 @@
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'PERSON', 'B-PERSON', 'I-PER', 'B-NAME', 'B-person', 'I-NAME', 'NAME', 'person', 'B-PER', 'PER', 'I-person', 'I-PERSON'}
+           label              pred
+0        @|colgo                  
+1   Inabo|Senior      Inabo|Senior
+2                                 
+3  Kevin|Therese  Kevin|Therese|JG
+4                                 
+pred	0.366222	0.760241	0.241208
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'B-NAME', 'PER', 'B-PER', 'B-PERSON', 'I-PER', 'I-NAME', 'I-person', 'B-person', 'person', 'I-PERSON', 'NAME', 'PERSON'}
+           label              pred
+0        @|colgo                  
+1   Inabo|Senior      Inabo|Senior
+2                                 
+3  Kevin|Therese  Kevin|Therese|JG
+4                                 
+pred	0.485452	0.772310	0.353976
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'PERSON', 'B-person', 'B-NAME', 'PER', 'person', 'I-PERSON', 'B-PER', 'NAME', 'I-person', 'I-NAME', 'I-PER', 'B-PERSON'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior   Inabo|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.379228	0.847480	0.244266
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-NAME', 'NAME', 'B-person', 'I-PER', 'B-PERSON', 'B-PER', 'B-NAME', 'person', 'I-person', 'I-PERSON', 'PERSON', 'PER'}
+           label              pred
+0        @|colgo                  
+1   Inabo|Senior      Inabo|Senior
+2                                 
+3  Kevin|Therese  Kevin|Therese|JG
+4                                 
+pred	0.530395	0.786036	0.400229
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'B-PER', 'I-NAME', 'PER', 'NAME', 'person', 'B-person', 'I-person', 'B-PERSON', 'I-PER', 'I-PERSON', 'PERSON', 'B-NAME'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior          Inabo
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.500264	0.807496	0.362385
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-person', 'NAME', 'PER', 'I-NAME', 'B-NAME', 'B-person', 'PERSON', 'person', 'I-PER', 'B-PER', 'B-PERSON', 'I-PERSON'}
+           label          pred
+0        @|colgo         colgo
+1   Inabo|Senior  Inabo|Senior
+2                             
+3  Kevin|Therese         Kevin
+4                             
+pred	0.362113	0.539334	0.272554
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'PER', 'I-person', 'NAME', 'I-PERSON', 'person', 'I-NAME', 'B-PERSON', 'PERSON', 'B-NAME', 'B-person', 'B-PER', 'I-PER'}
+           label           pred
+0        @|colgo             go
+1   Inabo|Senior          Inabo
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.135488	0.262061	0.091361
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-NAME', 'person', 'NAME', 'B-PER', 'B-NAME', 'B-PERSON', 'I-PERSON', 'I-PER', 'PER', 'PERSON', 'I-person', 'B-person'}
+           label           pred
+0        @|colgo          colgo
+1   Inabo|Senior            abo
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                            lt
+pred	0.418978	0.576305	0.329128
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'PERSON', 'B-NAME', 'B-person', 'PER', 'person', 'B-PER', 'I-PERSON', 'I-person', 'I-NAME', 'NAME', 'I-PER', 'B-PERSON'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior          Inabo
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.397046	0.873862	0.256881
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-PER', 'I-person', 'PER', 'NAME', 'B-person', 'I-NAME', 'person', 'B-PER', 'B-PERSON', 'B-NAME', 'PERSON', 'I-PERSON'}
+           label           pred
+0        @|colgo             go
+1   Inabo|Senior   Inabo|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.514521	0.701187	0.406346
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-NAME', 'I-PER', 'I-PERSON', 'B-PERSON', 'PER', 'person', 'B-NAME', 'NAME', 'PERSON', 'B-PER', 'B-person', 'I-person'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior   Inabo|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.530665	0.828734	0.390291
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'NAME', 'B-person', 'person', 'I-PERSON', 'I-NAME', 'B-NAME', 'PER', 'B-PERSON', 'B-PER', 'I-PER', 'PERSON', 'I-person'}
+           label           pred
+0        @|colgo          colgo
+1   Inabo|Senior      In|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.669587	0.843696	0.555046
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'PER', 'person', 'I-PER', 'B-person', 'B-PERSON', 'I-NAME', 'I-PERSON', 'PERSON', 'NAME', 'B-NAME', 'B-PER', 'I-person'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior          Inabo
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.455737	0.758682	0.325688
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'B-PERSON', 'B-PER', 'B-NAME', 'person', 'B-person', 'NAME', 'I-PER', 'PERSON', 'I-NAME', 'PER', 'I-person', 'I-PERSON'}
+           label          pred
+0        @|colgo              
+1   Inabo|Senior  Inabo|Senior
+2                    Vic|Aston
+3  Kevin|Therese         Kevin
+4                     Parlt|NS
+pred	0.393400	0.624792	0.287080
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-person', 'PER', 'PERSON', 'person', 'B-PERSON', 'NAME', 'I-PERSON', 'I-PER', 'B-PER', 'B-NAME', 'I-NAME', 'B-person'}
+           label           pred
+0        @|colgo          colgo
+1   Inabo|Senior   Inabo|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.517337	0.654386	0.427752
+Evalute on btwitter:
+Loading Dataset:  btwitter
+{'I-PER', 'PER', 'I-NAME', 'PERSON', 'B-person', 'I-PERSON', 'B-PER', 'person', 'B-NAME', 'B-PERSON', 'NAME', 'I-person'}
+           label           pred
+0        @|colgo               
+1   Inabo|Senior   Inabo|Senior
+2                              
+3  Kevin|Therese  Kevin|Therese
+4                              
+pred	0.386599	0.634934	0.277905
+
+
+
+
+
+Evalute on btwitter:
+pred	0.418978	0.576305	0.329128
+Evalute on btwitter:
+pred	0.135488	0.262061	0.091361
+Evalute on btwitter:
+pred	0.500264	0.807496	0.362385
+Evalute on btwitter:
+pred	0.485452	0.772310	0.353976
+Evalute on btwitter:
+pred	0.379228	0.847480	0.244266
+Evalute on btwitter:
+pred	0.362113	0.539334	0.272554
+Evalute on btwitter:
+pred	0.530395	0.786036	0.400229
+Evalute on btwitter:
+pred	0.366222	0.760241	0.241208
+Evalute on btwitter:
+pred	0.386599	0.634934	0.277905
+Evalute on btwitter:
+pred	0.517337	0.654386	0.427752
+Evalute on btwitter:
+pred	0.669587	0.843696	0.555046
+Evalute on btwitter:
+pred	0.514521	0.701187	0.406346
+Evalute on btwitter:
+pred	0.455737	0.758682	0.325688
+Evalute on btwitter:
+pred	0.393400	0.624792	0.287080
+Evalute on btwitter:
+pred	0.530665	0.828734	0.390291
+Evalute on btwitter:
+pred	0.397046	0.873862	0.256881
+Evalute on tweebank:
+Loading Dataset:  tweebank
+Downloading and preparing dataset tweebank_ner/tweebank_ner to /network/scratch/h/hao.yu/tner___tweebank_ner/tweebank_ner/1.0.1/ac8e96b88e54539f83200985c527eee945e81e78a27802ee9f8bf027e888c4f6...
+Dataset tweebank_ner downloaded and prepared to /network/scratch/h/hao.yu/tner___tweebank_ner/tweebank_ner/1.0.1/ac8e96b88e54539f83200985c527eee945e81e78a27802ee9f8bf027e888c4f6. Subsequent calls will reuse this data.
+{'I-NAME', 'B-PERSON', 'B-person', 'B-PER', 'person', 'I-PERSON', 'NAME', 'PERSON', 'PER', 'B-NAME', 'I-PER', 'I-person'}
+   label     pred
+0          USER18
+1                
+2          Desire
+3                
+4  Kesha  USER526
+pred	0.174288	0.131682	0.257653
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-PERSON', 'B-PER', 'B-person', 'PER', 'person', 'PERSON', 'I-PER', 'I-person', 'B-NAME', 'I-NAME', 'B-PERSON', 'NAME'}
+   label        pred
+0                   
+1                   
+2                   
+3                   
+4  Kesha  USER|Kesha
+pred	0.164948	0.166667	0.163265
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PER', 'NAME', 'I-NAME', 'I-person', 'I-PER', 'B-person', 'person', 'B-NAME', 'PERSON', 'I-PERSON', 'PER', 'B-PERSON'}
+   label   pred
+0              
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.405063	0.402010	0.408163
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-PERSON', 'B-PER', 'person', 'NAME', 'I-NAME', 'B-person', 'I-person', 'PER', 'B-PERSON', 'B-NAME', 'PERSON', 'I-PER'}
+   label       pred
+0                  
+1                  
+2               767
+3                  
+4  Kesha  526|Kesha
+pred	0.630029	0.511962	0.818878
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-PERSON', 'B-PERSON', 'person', 'B-person', 'B-PER', 'I-person', 'I-NAME', 'B-NAME', 'PER', 'NAME', 'PERSON', 'I-PER'}
+   label pred
+0            
+1            
+2            
+3            
+4  Kesha     
+pred	0.794944	0.884375	0.721939
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-PERSON', 'B-PER', 'PER', 'B-person', 'I-PER', 'I-person', 'B-PERSON', 'NAME', 'I-NAME', 'B-NAME', 'PERSON', 'person'}
+   label   pred
+0              
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.670494	0.609603	0.744898
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PER', 'I-person', 'B-PERSON', 'NAME', 'I-NAME', 'B-person', 'I-PERSON', 'PERSON', 'person', 'PER', 'B-NAME', 'I-PER'}
+   label   pred
+0            12
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.593781	0.489256	0.755102
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'PERSON', 'I-NAME', 'B-PERSON', 'PER', 'I-PERSON', 'person', 'B-NAME', 'I-PER', 'B-person', 'B-PER', 'NAME', 'I-person'}
+   label            pred
+0                       
+1                       
+2         Burning Desire
+3                       
+4  Kesha           Kesha
+pred	0.750877	0.693305	0.818878
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PERSON', 'I-person', 'I-PER', 'PERSON', 'NAME', 'B-NAME', 'B-person', 'PER', 'person', 'I-NAME', 'B-PER', 'I-PERSON'}
+   label   pred
+0              
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.359264	0.403175	0.323980
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PER', 'B-PERSON', 'PERSON', 'I-NAME', 'NAME', 'I-person', 'PER', 'person', 'B-person', 'I-PER', 'I-PERSON', 'B-NAME'}
+   label        pred
+0              @USER
+1                   
+2                   
+3                   
+4  Kesha  USER|Kesha
+pred	0.334891	0.241031	0.548469
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PER', 'I-PERSON', 'person', 'I-PER', 'B-NAME', 'B-PERSON', 'PERSON', 'I-NAME', 'I-person', 'B-person', 'NAME', 'PER'}
+   label           pred
+0                  USER
+1                      
+2                      
+3                      
+4  Kesha  USER526|Kesha
+pred	0.417827	0.328467	0.573980
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-PERSON', 'I-NAME', 'B-person', 'PER', 'person', 'I-PERSON', 'I-person', 'NAME', 'PERSON', 'I-PER', 'B-PER', 'B-NAME'}
+   label        pred
+0                   
+1                   
+2                   
+3                   
+4  Kesha  USER|Kesha
+pred	0.576302	0.444598	0.818878
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'PER', 'I-NAME', 'I-PERSON', 'B-NAME', 'I-PER', 'I-person', 'B-PER', 'PERSON', 'NAME', 'person', 'B-PERSON', 'B-person'}
+   label      pred
+0                 
+1                 
+2                 
+3                 
+4  Kesha  Kesha. .
+pred	0.779184	0.868339	0.706633
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-person', 'NAME', 'I-PER', 'B-PERSON', 'PER', 'B-NAME', 'person', 'B-PER', 'PERSON', 'I-PERSON', 'I-NAME', 'B-person'}
+   label   pred
+0              
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.676190	0.633929	0.724490
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'B-NAME', 'I-NAME', 'PER', 'I-PERSON', 'B-PER', 'NAME', 'PERSON', 'B-person', 'I-PER', 'person', 'B-PERSON', 'I-person'}
+   label           pred
+0             @USER1812
+1                      
+2                      
+3                      
+4  Kesha  USER526|Kesha
+pred	0.514938	0.392761	0.747449
+Evalute on tweebank:
+Loading Dataset:  tweebank
+{'I-PER', 'B-PER', 'PER', 'person', 'I-PERSON', 'PERSON', 'B-PERSON', 'NAME', 'B-NAME', 'I-NAME', 'I-person', 'B-person'}
+   label   pred
+0              
+1              
+2              
+3              
+4  Kesha  Kesha
+pred	0.806658	0.809769	0.803571
