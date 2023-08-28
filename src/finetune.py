@@ -25,6 +25,7 @@ parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
 parser.add_argument("--substitude", type=int, default=0)
 parser.add_argument("--local_rank", type=int, default=-1)
+parser.add_argument("--seed", "-s", type=int, default=57706989)
 args = parser.parse_args()
 
 model_checkpoint = args.base_model
@@ -36,6 +37,7 @@ sub_structure += (
     if args.sub_structure and args.sub_structure != "None"
     else ""
 )
+sub_structure += f"-{args.seed}"
 
 dataset_name = args.datasets[0]
 if "HT" in dataset_name:
@@ -46,6 +48,8 @@ elif "polyglot" in dataset_name:
     batch_size = 32
 elif "ontonotes5" in dataset_name:
     batch_size = 32
+elif "wiki" in dataset_name:
+    batch_size = 64
 else:
     batch_size = 128
 
@@ -136,7 +140,7 @@ args = TrainingArguments(
     output_dir="./saved_models/"
     + f"{model_checkpoint.split('/')[-1]}{sub_structure}-{dataset_name}",
     overwrite_output_dir=True,
-    seed=57706989,
+    seed=args.seed,
     evaluation_strategy="epoch" if do_eval else "no",
     # evaluation_strategy = "steps",
     # eval_steps = 200, #14041 // 2 // batch_size,

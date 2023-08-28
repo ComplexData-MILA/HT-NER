@@ -129,7 +129,7 @@ if __name__ == "__main__":
         type=str,
         choices=[
             "gpt4",
-            "gpt3.5",
+            "gpt3.5","gpt3.5-0301",
             "davinci",
             "D",
             "Curie",
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     mapping = {
         "gpt4": "gpt-4",
         "gpt3.5": "gpt-3.5-turbo",
+        "gpt3.5-0301": "gpt-3.5-turbo-0301",
         "davinci": "text-davinci-003",
         "D": "text-davinci-003",
         "Curie": "curie-001",

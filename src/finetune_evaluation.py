@@ -22,6 +22,7 @@ def main(args):
     sub_structure += "-LOC" if args.only_loc else ""
     sub_structure += "" if args.fold == -1 else "-fold" + str(args.fold)
     sub_structure += "-" + args.sub_structure
+    # sub_structure += "-" + args.seed
 
     dataset_name = args.datasets  # [0]
     batch_size = 50
@@ -160,26 +161,28 @@ def main(args):
         device=0,
         aggregation_strategy="simple",
     )
+    if "conll" in model_checkpoint:
+        print("Evalute on CoNLL2003:")
+        evaluateGeneral(extractor, "conll2003").to_csv(
+            f"./results/finetune5seed/conll2003_{model_name}.csv"
+        )
 
-    print("Evalute on CoNLL2003:")
-    evaluateGeneral(extractor, "conll2003").to_csv(
-        f"./results/finetune2/conll2003_{model_name}.csv"
-    )
+    if "wnut" in model_checkpoint:
+        print("Evalute on WNUT2017:")
+        evaluateGeneral(extractor, "wnut2017").to_csv(
+            f"./results/finetune5seed/wnut2017_{model_name}.csv"
+        )
 
-    print("Evalute on WNUT2017:")
-    evaluateGeneral(extractor, "wnut2017").to_csv(
-        f"./results/finetune2/wnut2017_{model_name}.csv"
-    )
+    if "wiki" in model_checkpoint:
+        print("Evalute on wikiner:")
+        evaluateGeneral(extractor, "wikiner-en").to_csv(
+            f"./results/finetune5seed/wikiner_{model_name}.csv"
+        )
 
-    print("Evalute on wikiner:")
-    evaluateGeneral(extractor, "wikiner-en").to_csv(
-        f"./results/finetune2/wikiner_{model_name}.csv"
-    )
-
-    print("Evalute on fewnerd:")
-    evaluateGeneral(extractor, "fewnerd-l1").to_csv(
-        f"./results/finetune2/fewnerdl1_{model_name}.csv"
-    )
+    # print("Evalute on fewnerd:")
+    # evaluateGeneral(extractor, "fewnerd-l1").to_csv(
+    #     f"./results/finetune5seed/fewnerdl1_{model_name}.csv"
+    # )
 
 
 if __name__ == "__main__":
@@ -191,5 +194,6 @@ if __name__ == "__main__":
     parser.add_argument("--fold", type=int, default=-1)
     parser.add_argument("--sub-structure", type=str, default="")
     parser.add_argument("--substitude", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
     main(args)
