@@ -1,6 +1,7 @@
 # https://github.com/hiyouga/LLaMA-Efficient-Tuning.git
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 import os
 
 cache_path = os.path.join(os.getenv("SCRATCH"), ".cache", "huggingface")
@@ -19,20 +20,39 @@ from transformers import (
     AutoTokenizer,
     DataCollatorForTokenClassification,
     EarlyStoppingCallback,
-    AutoModelForCausalLM
+    AutoModelForCausalLM,
 )
 
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
-parser.add_argument("--base-model", type=str, required=True, default="meta-llama/Llama-2-7b-chat-hf")
-parser.add_argument("--datasets", nargs="+", type=str, required=True, default=['conll2003'])
+parser.add_argument(
+    "--base-model", type=str, required=True, default="meta-llama/Llama-2-7b-chat-hf"
+)
+parser.add_argument(
+    "--datasets", nargs="+", type=str, required=True, default=["conll2003"]
+)
 parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
 parser.add_argument("--substitude", type=int, default=0)
 parser.add_argument("--local_rank", type=int, default=-1)
-args = parser.parse_args(args=['--base-model','baichuan-inc/Baichuan-13B-Chat','--datasets','conll2003','--only-loc','0','--fold','-1','--substitude','0','--local_rank','-1'])
+args = parser.parse_args(
+    args=[
+        "--base-model",
+        "baichuan-inc/Baichuan-13B-Chat",
+        "--datasets",
+        "conll2003",
+        "--only-loc",
+        "0",
+        "--fold",
+        "-1",
+        "--substitude",
+        "0",
+        "--local_rank",
+        "-1",
+    ]
+)
 
 model_checkpoint = args.base_model
 sub_structure = ""

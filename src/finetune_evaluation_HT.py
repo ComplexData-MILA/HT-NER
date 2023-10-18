@@ -164,6 +164,7 @@ def main(args):
         getHTUnifiedRaw,
         getHTGen6kRaw,
         getHTGen12kRaw,
+        getHTGenV2Raw,
     )
 
     print("Evalute on HTName:")
@@ -172,7 +173,7 @@ def main(args):
 
     HTUName.rename(columns={"pred": "name"}, inplace=True)
     # HTUName["location"] = HTULocation["pred"]
-    HTUName.to_csv(f"./results/finetune/HTName_{model_name}.csv", index=False)
+    HTUName.to_csv(f"./results/ht_dataset/HTName_{model_name}.csv", index=False)
 
     print("Evalute on HTUnified:")
     HTUName = evaluateHT(extractor, getHTUnifiedRaw(), label_col="name")
@@ -180,15 +181,19 @@ def main(args):
 
     HTUName.rename(columns={"pred": "name"}, inplace=True)
     HTUName["location"] = HTULocation["pred"]
-    HTUName.to_csv(f"./results/finetune/HTUnified_{model_name}.csv", index=False)
+    HTUName.to_csv(f"./results/ht_dataset/HTUnified_{model_name}.csv", index=False)
 
     print("Evalute on HTGen 6k:")
     HTUName = evaluateHT(extractor, getHTGen6kRaw(), label_col="gpt_name")
-    HTUName.to_csv(f"./results/finetune/HTGen6k_{model_name}.csv", index=False)
+    HTUName.to_csv(f"./results/ht_dataset/HTGen6k_{model_name}.csv", index=False)
 
     print("Evalute on HTGen 12K:")
     HTUName = evaluateHT(extractor, getHTGen12kRaw(), label_col="gpt_name")
-    HTUName.to_csv(f"./results/finetune/HTGen12k_{model_name}.csv", index=False)
+    HTUName.to_csv(f"./results/ht_dataset/HTGen12k_{model_name}.csv", index=False)
+
+    print("Evalute on HTGen V2:")
+    HTUName = evaluateHT(extractor, getHTGenV2Raw(), label_col="gpt_name")
+    HTUName.to_csv(f"./results/ht_dataset/HTGenV2_{model_name}.csv", index=False)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ ROOTS_OPTIONS = {
     "HTUnsup": "./data/cache/HT",
     "HTGen-6k": "./data/cache/HT",
     "HTGen-12k": "./data/cache/HT",
+    "HTGenV2": "./data/cache/HT",
 }
 
 
@@ -102,6 +103,13 @@ def _loadWrapper(ds_name, root, kargs):
         assert root, "HT dataset need root path"
         kargs.update({"version": "12k"})
         return ht_gen(root, kargs)
+    elif ds_name in [
+        "HTGenV2",
+        "htgenv2",
+    ]:
+        assert root, "HT dataset need root path"
+        kargs.update({"version": "v2"})
+        return ht_gen(root, kargs)
     elif ds_name in ["polyglot_ner"]:
         return polyglot_ner()
     elif ds_name in ["ontonotes5"]:
@@ -117,7 +125,7 @@ def _loadWrapper(ds_name, root, kargs):
 
 
 def loadDataset(ds_name, root="", unique="", substitude=False, fold=-1, **kargs):
-    print("Loading Dataset: ", ds_name)
+    print("Loading Dataset:", ds_name)
     # by default, num of folds = 5, if fold == -1, not fold, otherwise, fold/5 th fold
     ds_name = ds_name.lower()
     ds, label_list, label_col_name = _loadWrapper(ds_name, root, kargs)
@@ -694,8 +702,19 @@ def ht_gen(root, kargs):
 
     if kargs.get("version", "6k") == "6k":
         full_df = help_load(pd.read_csv(pj(root, "HTGen-6k_tokenized.csv")))
-    else:
+    elif kargs.get("version") == "12k":
         full_df = help_load(pd.read_csv(pj(root, "HTGen-12k_tokenized.csv")))
+    elif kargs.get("version") == "v2":
+        train_full_df = help_load(pd.read_csv(pj(root, "HTGenV2train_tokenized.csv")))
+        test_full_df = help_load(pd.read_csv(pj(root, "HTGenV2test_tokenized.csv")))
+        datasets = DatasetDict()
+        datasets["train"] = Dataset.from_pandas(train_full_df)
+        datasets["validation"] = datasets["test"] = Dataset.from_pandas(test_full_df)
+        label_list = ["O", "B-LOC", "I-LOC", "B-NAME", "I-NAME"]
+        return datasets, label_list, "tags"
+    else:
+        full_df = help_load(pd.read_csv(pj(root, "HTGen-6k_tokenized.csv")))
+
     ds = Dataset.from_pandas(full_df)
     datasets = DatasetDict()
     datasets["train"] = datasets["validation"] = datasets["test"] = ds
@@ -796,8 +815,11 @@ def ontonotes5():
     # print(ds["train"][0])
     return ds, label_list, "tags"
 
+
 def btwitter(root):
-    ds = load_dataset("strombergnlp/broad_twitter_corpus", cache_dir=cache_path)  # or "GateNLP/broad_twitter_corpus"
+    ds = load_dataset(
+        "strombergnlp/broad_twitter_corpus", cache_dir=cache_path
+    )  # or "GateNLP/broad_twitter_corpus"
     # ds = ds.filter(lambda x: x["ner_tags"])
     label_list = [
         "O",
@@ -810,8 +832,9 @@ def btwitter(root):
     ]
     return ds, label_list, "ner_tags"
 
+
 def tweebank(root):
-    ds = load_dataset("tner/tweebank_ner", cache_dir=cache_path) 
+    ds = load_dataset("tner/tweebank_ner", cache_dir=cache_path)
     # ds = ds.filter(lambda x: x["ner_tags"])
     # "B-LOC": 0,
     # "B-MISC": 1,
@@ -831,9 +854,10 @@ def tweebank(root):
         "I-MISC",
         "I-ORG",
         "I-PER",
-        "O"
+        "O",
     ]
     return ds, label_list, "tags"
+
 
 def unioned_datasets(root, kargs):
     dataset_dict = {

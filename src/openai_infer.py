@@ -129,7 +129,8 @@ if __name__ == "__main__":
         type=str,
         choices=[
             "gpt4",
-            "gpt3.5","gpt3.5-0301",
+            "gpt3.5",
+            "gpt3.5-0301",
             "davinci",
             "D",
             "Curie",
@@ -185,11 +186,11 @@ if __name__ == "__main__":
     for i, text in enumerate(tqdm(df["text"].tolist())):
         if i < len(responses):
             continue
-        
+
         while True:
             try:
                 response = request(ht_prompt, text, model=args.model)
-                break 
+                break
             except Exception as e:
                 print("Error Type:", e)
                 print("Retrying in 10 seconds...")

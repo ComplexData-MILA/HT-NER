@@ -54,8 +54,11 @@ def load(fn, text_cols, label_cols, default, tokenize=True):
             texts.append(text)
             return True
 
-        df = df[df.apply(nf, axis=1)]
-        df["text"] = texts
+        # df[~df.apply(nf, axis=1)].to_csv("./tmp.csv", index=False)
+        if "V2" not in fn:
+            df = df[df.apply(nf, axis=1)]
+            df["text"] = texts
+
         df = df[["text"] + label_cols]
 
         def wp(label):
@@ -281,6 +284,16 @@ def getHTGen12kRaw():
     )
 
 
+def getHTGenV2Raw():
+    return load(
+        "results/HTGenV2test.csv",
+        ["text"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+        False,
+    )
+
+
 if __name__ == "__main__":
     # Name
     df = load(
@@ -343,3 +356,22 @@ if __name__ == "__main__":
     )
 
     df.to_csv(pj(cache_path, "HTGen-12k_aligned.csv"), index=False)
+
+    # GenV2
+    df = load(
+        "./results/HTGenV2train.csv",
+        ["text"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+    )
+    print(df)
+    df.to_csv(pj(cache_path, "HTGenV2train_tokenized.csv"), index=False)
+
+    df = load(
+        "./results/HTGenV2test.csv",
+        ["text"],
+        ["gpt_location", "gpt_name"],
+        "NAME",
+    )
+    print(df)
+    df.to_csv(pj(cache_path, "HTGenV2test_tokenized.csv"), index=False)

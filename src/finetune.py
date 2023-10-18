@@ -37,7 +37,8 @@ sub_structure += (
     if args.sub_structure and args.sub_structure != "None"
     else ""
 )
-sub_structure += f"-{args.seed}"
+if args.seed != 57706989:
+    sub_structure += f"-{args.seed}"
 
 dataset_name = args.datasets[0]
 if "HT" in dataset_name:

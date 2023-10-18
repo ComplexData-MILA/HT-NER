@@ -22,19 +22,38 @@ from transformers import (
     AutoTokenizer,
     DataCollatorForTokenClassification,
     EarlyStoppingCallback,
-    AutoModelForCausalLM
+    AutoModelForCausalLM,
 )
 
 ### Receive Augmentation
 parser = argparse.ArgumentParser()
-parser.add_argument("--base-model", type=str, required=True, default="meta-llama/Llama-2-7b-chat-hf")
-parser.add_argument("--datasets", nargs="+", type=str, required=True, default=['conll2003'])
+parser.add_argument(
+    "--base-model", type=str, required=True, default="meta-llama/Llama-2-7b-chat-hf"
+)
+parser.add_argument(
+    "--datasets", nargs="+", type=str, required=True, default=["conll2003"]
+)
 parser.add_argument("--only-loc", type=int, default=0)
 parser.add_argument("--fold", type=int, default=-1)
 parser.add_argument("--sub-structure", type=str, default="")
 parser.add_argument("--substitude", type=int, default=0)
 parser.add_argument("--local_rank", type=int, default=-1)
-args = parser.parse_args(args=['--base-model','baichuan-inc/Baichuan-13B-Chat','--datasets','conll2003','--only-loc','0','--fold','-1','--substitude','0','--local_rank','-1'])
+args = parser.parse_args(
+    args=[
+        "--base-model",
+        "baichuan-inc/Baichuan-13B-Chat",
+        "--datasets",
+        "conll2003",
+        "--only-loc",
+        "0",
+        "--fold",
+        "-1",
+        "--substitude",
+        "0",
+        "--local_rank",
+        "-1",
+    ]
+)
 
 model_checkpoint = args.base_model
 sub_structure = ""
@@ -77,14 +96,20 @@ wandb.init(
 )
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM,AutoConfig, AutoModel, BitsAndBytesConfig
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    AutoConfig,
+    AutoModel,
+    BitsAndBytesConfig,
+)
 from transformers.generation.utils import GenerationConfig
 import torch.nn as nn
 
-#使用QLoRA引入的 NF4量化数据类型以节约显存
+# 使用QLoRA引入的 NF4量化数据类型以节约显存
 # model_name_or_path ='../baichuan-13b' #远程 'baichuan-inc/Baichuan-13B-Chat'
 model_name_or_path = model_checkpoint
-bnb_config=BitsAndBytesConfig(
+bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_compute_dtype=torch.float16,
     bnb_4bit_use_double_quant=True,
@@ -94,16 +119,19 @@ bnb_config=BitsAndBytesConfig(
 )
 
 tokenizer = AutoTokenizer.from_pretrained(
-   model_name_or_path, trust_remote_code=True, token=hf_token)
+    model_name_or_path, trust_remote_code=True, token=hf_token
+)
 
-model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
-                quantization_config=bnb_config,
-                token=hf_token,
-                trust_remote_code=True) 
+model = AutoModelForCausalLM.from_pretrained(
+    model_name_or_path,
+    quantization_config=bnb_config,
+    token=hf_token,
+    trust_remote_code=True,
+)
 
 model.generation_config = GenerationConfig.from_pretrained(model_name_or_path)
 
-prefix = '''Named entity recognition: Extract the three types of named entities in the text: name, location, and organization, and return the results in json format.
+prefix = """Named entity recognition: Extract the three types of named entities in the text: name, location, and organization, and return the results in json format.
 
 Here are some examples:
 
@@ -112,29 +140,59 @@ Now, hundreds of thousands of Chinese people visit the United States every year,
 China is one of the permanent members of the UN Security Council. -> {"Location": ["China"], "Organization": ["United Nations"]}
 
 Please perform entity extraction on the following text and return it in json format.
-'''
+"""
 # %%
 def get_prompt(text):
-    return prefix+text+' -> '
+    return prefix + text + " -> "
 
-def get_message(prompt,response):
-    return [{"role": "user", "content": f'{prompt} -> '},
-            {"role": "assistant", "content": response}]
 
-messages = [{"role": "user", "content": get_prompt("Some Moroccan fans couldn't help but cheered in the stands")}]
-response = model. chat(tokenizer, messages)
+def get_message(prompt, response):
+    return [
+        {"role": "user", "content": f"{prompt} -> "},
+        {"role": "assistant", "content": response},
+    ]
+
+
+messages = [
+    {
+        "role": "user",
+        "content": get_prompt(
+            "Some Moroccan fans couldn't help but cheered in the stands"
+        ),
+    }
+]
+response = model.chat(tokenizer, messages)
 print(response)
-messages = messages+[{"role": "assistant", "content": "{'Location': ['Morocco']}"}]
-messages.extend(get_message("It's the Beijing Guoan team's turn this time, I wonder if they will follow suit?","{'organization': ['Beijing Guoan team']}"))
-messages.extend(get_message("Revolutionary Sun Yat-sen established a branch of the Tongmenghui in Macau", "{'person's name': ['Sun Zhongshan'], 'place name': ['Macao'], 'organization': ['Tongmenghui']} "))
-messages.extend(get_message("I used to work in Anhui Wuhu and Shanghai Pudong.","{'location': ['Anhui Wuhu', 'Shanghai Pudong']}"))
+messages = messages + [{"role": "assistant", "content": "{'Location': ['Morocco']}"}]
+messages.extend(
+    get_message(
+        "It's the Beijing Guoan team's turn this time, I wonder if they will follow suit?",
+        "{'organization': ['Beijing Guoan team']}",
+    )
+)
+messages.extend(
+    get_message(
+        "Revolutionary Sun Yat-sen established a branch of the Tongmenghui in Macau",
+        "{'person's name': ['Sun Zhongshan'], 'place name': ['Macao'], 'organization': ['Tongmenghui']} ",
+    )
+)
+messages.extend(
+    get_message(
+        "I used to work in Anhui Wuhu and Shanghai Pudong.",
+        "{'location': ['Anhui Wuhu', 'Shanghai Pudong']}",
+    )
+)
 # display(messages)
 
-def predict(text,temperature=0.01):
-    model.generation_config.temperature=temperature
-    response = model.chat(tokenizer, 
-                          messages = messages+[{'role':'user','content':f'{text} -> '}])
+
+def predict(text, temperature=0.01):
+    model.generation_config.temperature = temperature
+    response = model.chat(
+        tokenizer, messages=messages + [{"role": "user", "content": f"{text} -> "}]
+    )
     return response
-print("Sample prediction", predict('Du Fu was a fan of Li Bai.'))
+
+
+print("Sample prediction", predict("Du Fu was a fan of Li Bai."))
 
 # %%

@@ -150,3 +150,17 @@ Hao Yu, Javin Liu, Vidua Sujaya
 
 - Javin Liu: GPT-based name expansion and GPT based data-label generations
 - Vidya: Aggregation
+
+|                | Evluationg Dataset |      | Broad Twitter Corpus |        |      | Tweebank-NER |        |
+|----------------|--------------------|:----:|:--------------------:|:------:|:----:|:------------:|:------:|
+| Model          | Training Dataset   | F1   | Precision            | Recall | F1   | Precision    | Recall |
+| DeBERTaV3-base | HTUnsup            | 0.50 |                 0.81 |   0.36 | 0.41 |         0.40 |   0.41 |
+| DeBERTaV3-base | CoNLL2003          | 0.49 |                 0.77 |   0.35 | 0.63 |         0.51 |   0.82 |
+| DeBERTaV3-base | Few-NERD-L1        | 0.38 |                 0.85 |   0.24 | 0.79 |         0.88 |   0.72 |
+| DeBERTaV3-base | WikiNER-en         | 0.53 |                 0.79 |   0.40 | 0.59 |         0.49 |   0.76 |
+| DeBERTaV3-base | WNUT2017           | 0.37 |                 0.76 |   0.24 | 0.75 |         0.69 |   0.82 |
+| RoBERTa-base   | HTUnsup            | 0.67 |                 0.84 |   0.56 | 0.42 |         0.33 |   0.57 |
+| RoBERTa-base   | CoNLL2003          | 0.51 |                 0.70 |   0.41 | 0.58 |         0.44 |   0.82 |
+| RoBERTa-base   | Few-NERD-L1        | 0.46 |                 0.76 |   0.33 | 0.78 |         0.87 |   0.71 |
+| RoBERTa-base   | WikiNER-en         | 0.53 |                 0.83 |   0.39 | 0.51 |         0.39 |   0.75 |
+| RoBERTa-base   | WNUT2017           | 0.40 |                 0.87 |   0.26 | 0.81 |         0.81 |   0.80 |

@@ -162,39 +162,39 @@ def main(args):
         aggregation_strategy="simple",
     )
     # if "conll" in model_checkpoint:
-    #     print("Evalute on CoNLL2003:")
-    #     evaluateGeneral(extractor, "conll2003").to_csv(
-    #         f"./results/finetune5seed/conll2003_{model_name}.csv"
-    #     )
+    print("Evalute on CoNLL2003:")
+    evaluateGeneral(extractor, "conll2003").to_csv(
+        f"./results/os_dataset/conll2003_{model_name}.csv"
+    )
 
     # if "wnut" in model_checkpoint:
-    #     print("Evalute on WNUT2017:")
-    #     evaluateGeneral(extractor, "wnut2017").to_csv(
-    #         f"./results/finetune5seed/wnut2017_{model_name}.csv"
-    #     )
+    print("Evalute on WNUT2017:")
+    evaluateGeneral(extractor, "wnut2017").to_csv(
+        f"./results/os_dataset/wnut2017_{model_name}.csv"
+    )
 
     # if "wiki" in model_checkpoint:
-    #     print("Evalute on wikiner:")
-    #     evaluateGeneral(extractor, "wikiner-en").to_csv(
-    #         f"./results/finetune5seed/wikiner_{model_name}.csv"
-    #     )
+    print("Evalute on wikiner:")
+    evaluateGeneral(extractor, "wikiner-en").to_csv(
+        f"./results/os_dataset/wikiner_{model_name}.csv"
+    )
 
-    # # if "btwitter" in model_checkpoint:
-    # print("Evalute on btwitter:")
-    # evaluateGeneral(extractor, "btwitter").to_csv(
-    #     f"./results/finetune2/btwitter_{model_name}.csv"
-    # )
-    
+    # if "btwitter" in model_checkpoint:
+    print("Evalute on btwitter:")
+    evaluateGeneral(extractor, "btwitter").to_csv(
+        f"./results/os_dataset/btwitter_{model_name}.csv"
+    )
+
     # if "tweebank" in model_checkpoint:
     print("Evalute on tweebank:")
     evaluateGeneral(extractor, "tweebank").to_csv(
-        f"./results/finetune2/tweebank_{model_name}.csv"
+        f"./results/os_dataset/tweebank_{model_name}.csv"
     )
 
-    # print("Evalute on fewnerd:")
-    # evaluateGeneral(extractor, "fewnerd-l1").to_csv(
-    #     f"./results/finetune5seed/fewnerdl1_{model_name}.csv"
-    # )
+    print("Evalute on fewnerd:")
+    evaluateGeneral(extractor, "fewnerd-l1").to_csv(
+        f"./results/os_dataset/fewnerdl1_{model_name}.csv"
+    )
 
 
 if __name__ == "__main__":
