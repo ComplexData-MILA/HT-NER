@@ -1,5 +1,15 @@
 # SWEET - Weakly Supervised Person Name Extraction for Fighting Human Trafficking
 
+## Running SWEET:
+
+To use sweet, use the run_sweet.py file under the sweet folder. This takes 3 arguments:
+
+- dataset path: path to a csv file with a 'text' column containing the text you would like to run sweet on.
+- ft models results path: path to a csv file where each column represents a labeling function. The column name should be the name of the labeling function, and the contents, the weak labels, separated by '|'.
+- results path: path to a csv file where you want to store the results of sweet.
+
+To evaluate sweet, run the f1 method in the neat_metrics.py file under src folder. 
+
 ## Repository Contributor: 
 Hao Yu, Javin Liu, Vidya Sujaya
 
