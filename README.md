@@ -150,3 +150,8 @@ Hao Yu, Javin Liu, Vidya Sujaya
 
 - Javin Liu: GPT-based name expansion and GPT based data-label generations
 - Vidya: Aggregation
+
+## HTGen Dataset: 
+
+We will shortly share a request form for those interested in accessing our HTGen dataset.
+
