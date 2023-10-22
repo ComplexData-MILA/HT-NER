@@ -158,7 +158,7 @@ Hao Yu, Javin Liu, Vidya Sujaya
 
     More exctuable commands for training can be found in [finetune.sh](./scripts/finetune.sh), for evaluting can be found in [eval.sh](./scripts/eval.sh)
 
-- Javin Liu: GPT-based name expansion and GPT based data-label generations
+- Javin Liu: Wrote the code for generating synthetic HT ads. Made the HTGen dataset and ran experiements to increase variety in the dataset. GPT based data-label generations
 - Vidya: Aggregation
 
 ## HTGen Dataset: 
