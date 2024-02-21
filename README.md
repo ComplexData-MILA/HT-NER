@@ -163,5 +163,5 @@ Hao Yu, Javin Liu, Vidya Sujaya
 
 ## HTGen Dataset: 
 
-If you are interested in accessing out HTGen Dataset, please email one of the paper authors.
+If you are interested in accessing out HTGen Dataset, please submit the following data request form: https://forms.gle/1HhQC4BhMYrn4MM26.
 
